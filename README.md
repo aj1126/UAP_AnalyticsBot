@@ -25,10 +25,11 @@ The repository currently includes the **Ingestion Engine** as the executable ent
 
 - Recursively scans a source directory
 - Filters supported file types
-- Emits discovered files for downstream processing
+- Streams discovered files through an asynchronous generator
+- Emits discovered file names for downstream processing
 - Enforces non-destructive, read-only behavior on source data
 
-Planned modules (Extraction, NLP/NER, full Analytics Engine, and reporting output layer) are documented in `docs/architecture.md`.
+Extraction, NLP/NER, full Analytics Engine, and reporting output are not yet wired into runtime execution. Planned modules are documented in `docs/architecture.md`.
 
 ## Supported File Types
 
@@ -71,12 +72,20 @@ You can also run with a relative path:
 python ingestion.py .\data
 ```
 
+Show CLI help:
+
+```powershell
+python ingestion.py -h
+```
+
 ## Expected Runtime Behavior
 
 On a successful run, the CLI:
 
 1. Prints a scan banner
-2. Lists each matching file as `[FOUND] <name>`
+2. Prints a separator line
+3. Lists each matching file as `[FOUND] <name>`
+4. Prints a "no supported files" message when no matching files are found
 3. Exits with code `0`
 
 If the folder does not exist, it prints an error and exits with code `1`.
@@ -100,7 +109,7 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 
 See `docs/architecture.md` for the planned full pipeline:
 
-1. Ingestion Engine
+1. Ingestion Engine (currently implemented as a manual CLI trigger)
 2. Extraction Node
 3. NLP + Entity Recognition
 4. Analytics Engine (Descriptive, Diagnostic, Predictive, Prescriptive)
