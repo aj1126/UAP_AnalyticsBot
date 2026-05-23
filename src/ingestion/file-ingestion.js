@@ -60,8 +60,32 @@ async function readTextFile(filePath, rootDirectory) {
     const lineReader = readline.createInterface({ input: stream, crlfDelay: Infinity });
     const lines = [];
 
-    for await (const line of lineReader) {
-        lines.push(line);
+    const readLinesPromise = (async () => {
+        for await (const line of lineReader) {
+            lines.push(line);
+        }
+    })();
+
+    const streamErrorPromise = new Promise((_, reject) => {
+        stream.once('error', (error) => {
+            reject(new Error(`Failed to read file "${filePath}": ${error.message}`));
+        });
+    });
+
+    try {
+        await Promise.race([readLinesPromise, streamErrorPromise]);
+        await readLinesPromise;
+    } catch (error) {
+        if (error instanceof Error && error.message.startsWith(`Failed to read file "${filePath}":`)) {
+            throw error;
+        }
+
+        throw new Error(`Failed to read file "${filePath}": ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+        lineReader.close();
+        if (!stream.destroyed) {
+            stream.destroy();
+        }
     }
 
     const text = lines.join('\n');
