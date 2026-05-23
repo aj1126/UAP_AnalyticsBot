@@ -7,8 +7,8 @@ from pathlib import Path
 class IngestionEngine:
     def __init__(self, source_directory: str):
         self.source_dir = Path(source_directory)
-        # Targeting our specific multi-media requirements
-        self.supported_extensions = {'.pdf', '.mp4'}
+        # Targeting our specific multi-media and image requirements
+        self.supported_extensions = {'.pdf', '.mp4', '.jpg', '.jpeg', '.png'}
         
     async def scan_directory(self):
         """
