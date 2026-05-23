@@ -1,21 +1,38 @@
-# IDEs and Editors
+# =========================
+# Python & Environments
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# =========================
+# Local OS & IDEs
+# =========================
 .vscode/
+.idea/
 .vs/
 *.suo
 *.user
-
-# OS Generated
 Thumbs.db
-ehthumbs.db
 .DS_Store
-desktop.ini
 
-# AI & Local Environment
+# =========================
+# AI & Security
+# =========================
 .env
 .env.local
 copilot-chat-history.json
 
-# Temporary Analytics Data (Do not track raw extracted media)
+# =========================
+# Bot Specific: Data & Media
+# =========================
+# Do NOT track raw extracted media or temporary processing files
 /temp_processing/
 /ingested_cache/
+/data_exports/
 *.log
+*.mp4
+*.pdf
