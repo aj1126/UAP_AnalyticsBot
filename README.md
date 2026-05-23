@@ -85,8 +85,8 @@ On a successful run, the CLI:
 1. Prints a scan banner
 2. Prints a separator line
 3. Lists each matching file as `[FOUND] <name>`
-4. Prints a "no supported files" message when no matching files are found
-3. Exits with code `0`
+4. If no matching files are found, prints a "no supported files" message with the supported extension list
+5. Exits with code `0`
 
 If the folder does not exist, it prints an error and exits with code `1`.
 
