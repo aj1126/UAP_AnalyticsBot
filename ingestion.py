@@ -31,7 +31,8 @@ class IngestionEngine:
                     yield file_path
                     
         if count == 0:
-            print("No supported files (.pdf, .mp4) found in the specified directory.")
+            supported = ", ".join(sorted(self.supported_extensions))
+            print(f"No supported files ({supported}) found in the specified directory.")
 
 async def main(folder_path: str):
     try:
