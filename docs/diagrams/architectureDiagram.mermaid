@@ -1,0 +1,49 @@
+flowchart LR
+    U[User / Operator] --> C[Run Analysis Command]
+
+    C --> O[Orchestrator]
+    O --> CFG[Config: source folder, filters, run options]
+
+    subgraph Ingestion [Read-Only Ingestion Layer]
+        S[(Local Source Folder)]
+        SCN[Directory Scanner]
+        EXT[File Type Router]
+        TXT[Async Text Extractor]
+        META[Metadata Extractor<br/>timestamps, path, size]
+        S --> SCN --> EXT
+        EXT --> TXT
+        EXT --> META
+    end
+
+    subgraph Processing [Normalization & Feature Layer]
+        CLEAN[Text Cleaning / Tokenization]
+        IDX[Corpus Index + Time/Location Features]
+    end
+
+    subgraph Analytics [Analytics Engine]
+        D1[Descriptive Analytics<br/>glossary, frequency, dates/locations]
+        D2[Diagnostic Analytics<br/>word ↔ date/location correlation]
+        D3[Predictive Analytics<br/>trend forecasting]
+        D4[Prescriptive Analytics<br/>actions, restructuring suggestions,<br/>missing-data flags]
+    end
+
+    subgraph Outputs [Reporting & Delivery]
+        REP[Structured Analysis Report]
+        EXP[Export: JSON / CSV / Markdown]
+        LOG[Run Logs & Traceability]
+    end
+
+    O --> Ingestion
+    TXT --> CLEAN
+    META --> IDX
+    CLEAN --> IDX
+
+    IDX --> D1 --> D2 --> D3 --> D4
+    D1 --> REP
+    D2 --> REP
+    D3 --> REP
+    D4 --> REP
+    REP --> EXP
+    REP --> LOG
+
+    S -. non-destructive access .-> SCN
