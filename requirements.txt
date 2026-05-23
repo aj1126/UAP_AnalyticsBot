@@ -16,3 +16,9 @@ openai-whisper>=2023   # Local speech-to-text transcription for audio files
 # Utilities
 # -----------------------------------------
 python-dotenv>=1.0.0   # Secure local environment variable management
+
+# -----------------------------------------
+# Image Ingestion & OCR
+# -----------------------------------------
+Pillow>=10.0.0         # Image metadata and EXIF extraction (for dates/locations)
+pytesseract>=0.3.10    # Optical Character Recognition for reading text inside images
