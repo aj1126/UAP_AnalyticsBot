@@ -1,0 +1,21 @@
+# IDEs and Editors
+.vscode/
+.vs/
+*.suo
+*.user
+
+# OS Generated
+Thumbs.db
+ehthumbs.db
+.DS_Store
+desktop.ini
+
+# AI & Local Environment
+.env
+.env.local
+copilot-chat-history.json
+
+# Temporary Analytics Data (Do not track raw extracted media)
+/temp_processing/
+/ingested_cache/
+*.log
