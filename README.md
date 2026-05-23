@@ -21,15 +21,28 @@ The analysis stage is intentionally split into four tiers:
 
 ## Current Implementation Status
 
-The repository currently includes the **Ingestion Engine** as the executable entry point:
+The repository currently includes the **Ingestion Engine** as the executable entry point (Node.js):
 
-- Recursively scans a source directory
-- Filters supported file types
-- Streams discovered files through an asynchronous generator
-- Emits discovered file names for downstream processing
+- Walks a source directory in read-only mode
+- Streams supported text files for ingestion
+- Produces descriptive, diagnostic, predictive, and prescriptive analytics in JSON
 - Enforces non-destructive, read-only behavior on source data
 
-Extraction, NLP/NER, full Analytics Engine, and reporting output are not yet wired into runtime execution. Planned modules are documented in `docs/architecture.md`.
+Extraction, NLP/NER, full Analytics Engine, and advanced reporting output are not yet fully integrated. Planned modules are documented in `docs/architecture.md`.
+
+## Past Implementations
+
+### Python CLI Ingestion Engine
+
+An earlier Python-based implementation provided:
+
+- Recursive directory scanning with asynchronous generators
+- Supported file type filtering (`.pdf`, `.mp4`, `.jpg`, `.jpeg`, `.png`)
+- Command-line interface for manual trigger and folder path configuration
+- File discovery and emission for downstream processing
+- Read-only behavioral guarantees
+
+This approach laid the foundation for the current Node.js analytics-focused implementation.
 
 ## Supported File Types
 
@@ -121,3 +134,23 @@ See `docs/architecture.md` for the planned full pipeline:
 - Prefer asynchronous and streaming patterns for large datasets.
 - Preserve strict read-only behavior for source directories.
 - When adding analytics, classify behavior under one of the four analytics tiers.
+
+## Initial implementation
+
+The repository now contains a minimal Node.js implementation that:
+
+- walks a source directory in read-only mode
+- ~~streams supported text files for ingestion~~ (**outdated**)
+- produces descriptive, diagnostic, predictive, and prescriptive analytics in JSON
+
+### Usage
+
+```bash
+npm start -- /absolute/path/to/source-folder
+```
+
+### Testing
+
+```bash
+npm test
+```

@@ -1,0 +1,20 @@
+{
+  "name": "uap_analyticsbot",
+  "version": "1.0.0",
+  "description": "File analytics bot for descriptive, diagnostic, predictive, and prescriptive analysis.",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aj1126/UAP_AnalyticsBot.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aj1126/UAP_AnalyticsBot/issues"
+  },
+  "homepage": "https://github.com/aj1126/UAP_AnalyticsBot#readme"
+}
