@@ -34,7 +34,7 @@ function extractDates(text) {
 }
 
 function extractLocations(text) {
-    const metadataPattern = /\b(?:location|city|site)\s*:\s*([A-Z][a-zA-Z]+(?:[\s-][A-Z][a-zA-Z]+)*)/g;
+    const metadataPattern = /\b(?:location|city|site)\s*:\s*([A-Z][a-zA-Z]+(?:[\s-][A-Z][a-zA-Z]+)*)/gi;
     const sentencePattern = /\b(?:in|at|near)\s+([A-Z][a-zA-Z]+(?:[\s-][A-Z][a-zA-Z]+)*)/g;
     const locations = new Set();
 
@@ -49,13 +49,13 @@ function extractLocations(text) {
 }
 
 async function readTextFile(filePath, rootDirectory) {
-    const stats = await fsp.stat(filePath);
     const extension = path.extname(filePath).toLowerCase();
 
     if (!TEXT_EXTENSIONS.has(extension)) {
         return null;
     }
 
+    const stats = await fsp.stat(filePath);
     const stream = fs.createReadStream(filePath, { encoding: 'utf8' });
     const lineReader = readline.createInterface({ input: stream, crlfDelay: Infinity });
     const lines = [];
