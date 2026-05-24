@@ -33,28 +33,33 @@ async function createFixtureDirectory() {
 test('generateAnalyticsReport builds all analytics tiers from text files', async () => {
     const fixtureRoot = await createFixtureDirectory();
 
-    const report = await generateAnalyticsReport(fixtureRoot);
+    try {
+        const report = await generateAnalyticsReport(fixtureRoot);
 
-    assert.equal(report.descriptive.fileCount, 2);
-    assert.deepEqual(report.descriptive.locations, ['Phoenix', 'Roswell']);
-    assert.deepEqual(report.descriptive.dates, ['2024-01-01', '2024-02-14']);
-    assert.ok(report.descriptive.wordFrequency.location >= 2);
-    assert.ok(report.diagnostic.wordUsageByLocation.Roswell.length > 0);
-    assert.equal(report.predictive.locationClusterForecast.likelyNextHotspot, 'Phoenix');
-    assert.equal(report.prescriptive.recommendations[0].type, 'folder-restructure');
-
-    await fs.rm(fixtureRoot, { recursive: true, force: true });
+        assert.equal(report.descriptive.fileCount, 2);
+        assert.deepEqual(report.descriptive.locations, ['Phoenix', 'Roswell']);
+        assert.deepEqual(report.descriptive.dates, ['2024-01-01', '2024-02-14']);
+        assert.ok(report.descriptive.wordFrequency.location >= 2);
+        assert.ok(report.diagnostic.wordUsageByLocation.Roswell.length > 0);
+        assert.equal(report.predictive.locationClusterForecast.likelyNextHotspot, 'Phoenix');
+        assert.equal(report.prescriptive.recommendations[0].type, 'folder-restructure');
+    } finally {
+        await fs.rm(fixtureRoot, { recursive: true, force: true });
+    }
 });
 
 test('generateAnalyticsReport flags files with missing metadata for prescriptive actions', async () => {
     const fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'uap-analytics-'));
-    await fs.writeFile(path.join(fixtureRoot, 'partial.txt'), 'Strange humming without a location marker.');
 
-    const report = await generateAnalyticsReport(fixtureRoot);
+    try {
+        await fs.writeFile(path.join(fixtureRoot, 'partial.txt'), 'Strange humming without a location marker.');
 
-    assert.equal(report.descriptive.fileCount, 1);
-    assert.equal(report.prescriptive.recommendations[0].type, 'missing-data');
-    assert.deepEqual(report.prescriptive.recommendations[0].files, ['partial.txt']);
+        const report = await generateAnalyticsReport(fixtureRoot);
 
-    await fs.rm(fixtureRoot, { recursive: true, force: true });
+        assert.equal(report.descriptive.fileCount, 1);
+        assert.equal(report.prescriptive.recommendations[0].type, 'missing-data');
+        assert.deepEqual(report.prescriptive.recommendations[0].files, ['partial.txt']);
+    } finally {
+        await fs.rm(fixtureRoot, { recursive: true, force: true });
+    }
 });

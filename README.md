@@ -28,7 +28,7 @@ The repository currently includes the **Ingestion Engine** as the executable ent
 - Produces descriptive, diagnostic, predictive, and prescriptive analytics in JSON
 - Enforces non-destructive, read-only behavior on source data
 
-Extraction, NLP/NER, full Analytics Engine, and advanced reporting output are not yet fully integrated. Planned modules are documented in `docs/architecture.md`.
+The current Node.js pipeline already executes the descriptive, diagnostic, predictive, and prescriptive analytics stages and emits a JSON report. Still planned are more advanced extraction capabilities, NLP/entity recognition (NER), and additional reporting outputs beyond the current JSON format; see `docs/architecture.md`.
 
 ## Past Implementations
 
@@ -140,7 +140,7 @@ See `docs/architecture.md` for the planned full pipeline:
 The repository now contains a minimal Node.js implementation that:
 
 - walks a source directory in read-only mode
-- ~~streams supported text files for ingestion~~ (**outdated**)
+- streams supported text files for ingestion
 - produces descriptive, diagnostic, predictive, and prescriptive analytics in JSON
 
 ### Usage
