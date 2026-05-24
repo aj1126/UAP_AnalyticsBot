@@ -24,7 +24,7 @@ The analysis stage is intentionally split into four tiers:
 The repository currently includes the **Ingestion Engine** as the executable entry point (Node.js):
 
 - Walks a source directory in read-only mode
-- Streams supported text files for ingestion
+- Filters supported file types
 - Produces descriptive, diagnostic, predictive, and prescriptive analytics in JSON
 - Enforces non-destructive, read-only behavior on source data
 
