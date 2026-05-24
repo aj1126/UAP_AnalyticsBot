@@ -12,7 +12,7 @@ sequenceDiagram
     participant PRE as Predictive Engine
     participant PRS as Prescriptive Engine
     participant REP as Report Generator
-    participant OUT as Exporter
+    participant OUT as Output Delivery
 
     U->>O: Start analysis (source folder, options)
     O->>SCN: Scan source folder (read-only)
@@ -44,5 +44,6 @@ sequenceDiagram
     O->>REP: Compose unified analysis report
     REP-->>O: Final report object
 
-    O->>OUT: Export (JSON/CSV/Markdown) + run logs
-    OUT-->>U: Deliver report artifacts
+    Note over O,OUT: CSV/Markdown exporters and run-log modules are unplanned for external dev use
+    O->>OUT: Emit JSON report to stdout
+    OUT-->>U: Deliver JSON output

@@ -34,8 +34,8 @@ function extractDates(text) {
 }
 
 function extractLocations(text) {
-    const metadataPattern = /\b(?:location|city|site)\s*:\s*([A-Z][a-zA-Z]+(?:[\s-][A-Z][a-zA-Z]+)*)/gi;
-    const sentencePattern = /\b(?:in|at|near)\s+([A-Z][a-zA-Z]+(?:[\s-][A-Z][a-zA-Z]+)*)/g;
+    const metadataPattern = /\b(?:location|city|site)\s*:\s*([A-Z][a-zA-Z]+(?:[ -][A-Z][a-zA-Z]+)*)/gi;
+    const sentencePattern = /\b(?:in|at|near)\s+([A-Z][a-zA-Z]+(?:[ -][A-Z][a-zA-Z]+)*)/g;
     const locations = new Set();
 
     for (const pattern of [metadataPattern, sentencePattern]) {
@@ -58,11 +58,19 @@ async function readTextFile(filePath, rootDirectory) {
     const stats = await fsp.stat(filePath);
     const stream = fs.createReadStream(filePath, { encoding: 'utf8' });
     const lineReader = readline.createInterface({ input: stream, crlfDelay: Infinity });
-    const lines = [];
+    const words = [];
+    const dates = new Set();
+    const locations = new Set();
 
     const readLinesPromise = (async () => {
         for await (const line of lineReader) {
-            lines.push(line);
+            words.push(...normalizeWords(line));
+            for (const date of extractDates(line)) {
+                dates.add(date);
+            }
+            for (const location of extractLocations(line)) {
+                locations.add(location);
+            }
         }
     })();
 
@@ -88,8 +96,6 @@ async function readTextFile(filePath, rootDirectory) {
         }
     }
 
-    const text = lines.join('\n');
-
     return {
         path: filePath,
         relativePath: path.relative(rootDirectory, filePath),
@@ -97,10 +103,9 @@ async function readTextFile(filePath, rootDirectory) {
         size: stats.size,
         createdAt: stats.birthtime.toISOString(),
         modifiedAt: stats.mtime.toISOString(),
-        text,
-        words: normalizeWords(text),
-        dates: extractDates(text),
-        locations: extractLocations(text)
+        words,
+        dates: [...dates],
+        locations: [...locations]
     };
 }
 
