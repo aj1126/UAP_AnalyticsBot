@@ -1,0 +1,24 @@
+# -----------------------------------------
+# Data Processing & Analytics Core
+# -----------------------------------------
+pandas>=2.0.0          # Core data manipulation for Descriptive/Diagnostic analytics
+nltk>=3.8.1            # Natural Language Toolkit for word glossaries and usage rates
+scikit-learn>=1.2.2    # Machine learning for Predictive/Prescriptive modeling
+
+# -----------------------------------------
+# Multi-Media Ingestion
+# -----------------------------------------
+pdfplumber>=0.10.2     # Non-destructive OCR and PDF table extraction
+moviepy>=1.0.3         # MP4 video manipulation and audio track stripping
+openai-whisper>=2023   # Local speech-to-text transcription for audio files
+
+# -----------------------------------------
+# Utilities
+# -----------------------------------------
+python-dotenv>=1.0.0   # Secure local environment variable management
+
+# -----------------------------------------
+# Image Ingestion & OCR
+# -----------------------------------------
+Pillow>=10.0.0         # Image metadata and EXIF extraction (for dates/locations)
+pytesseract>=0.3.10    # Optical Character Recognition for reading text inside images
