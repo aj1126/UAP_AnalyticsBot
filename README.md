@@ -46,14 +46,15 @@ This approach laid the foundation for the current Node.js analytics-focused impl
 
 ## Supported File Types
 
-Current ingestion scan targets:
+Current Node.js ingestion scan targets:
 
-- `.pdf`
-- `.mp4`
-- `.jpg`
-- `.jpeg`
-- `.png`
+- `.txt`
+- `.md`
+- `.json`
+- `.csv`
+- `.log`
 
+(The Python `ingestion.py` prototype scans `.pdf`, `.mp4`, `.jpg`, `.jpeg`, `.png`.)
 ## Setup
 
 ### 1) Create and activate a virtual environment
@@ -109,14 +110,15 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 
 ## Repository Layout
 
-```text
-.
-|- ingestion.py
-|- requirements.txt
-|- README.md
-`- docs/
-	`- architecture.md
-```
+    .
+    |- ingestion.py
+    |- requirements.txt
+    |- package.json
+    |- README.md
+    |- src/
+    |- test/
+    `- docs/
+        `- architecture.md
 
 ## Architecture Reference
 
