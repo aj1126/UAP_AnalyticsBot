@@ -21,14 +21,28 @@ The analysis stage is intentionally split into four tiers:
 
 ## Current Implementation Status
 
-The repository currently includes the **Ingestion Engine** as the executable entry point:
+The repository currently includes the **Ingestion Engine** as the executable entry point (Node.js):
 
-- Recursively scans a source directory
+- Walks a source directory in read-only mode
 - Filters supported file types
-- Emits discovered files for downstream processing
+- Produces descriptive, diagnostic, predictive, and prescriptive analytics in JSON
 - Enforces non-destructive, read-only behavior on source data
 
-Planned modules (Extraction, NLP/NER, full Analytics Engine, and reporting output layer) are documented in `docs/architecture.md`.
+The current Node.js pipeline already executes the descriptive, diagnostic, predictive, and prescriptive analytics stages and emits a JSON report. Still planned are more advanced extraction capabilities, NLP/entity recognition (NER), and additional reporting outputs beyond the current JSON format; see `docs/architecture.md`.
+
+## Past Implementations
+
+### Python CLI Ingestion Engine
+
+An earlier Python-based implementation provided:
+
+- Recursive directory scanning with asynchronous generators
+- Supported file type filtering (`.pdf`, `.mp4`, `.jpg`, `.jpeg`, `.png`)
+- Command-line interface for manual trigger and folder path configuration
+- File discovery and emission for downstream processing
+- Read-only behavioral guarantees
+
+This approach laid the foundation for the current Node.js analytics-focused implementation.
 
 ## Supported File Types
 
@@ -71,13 +85,21 @@ You can also run with a relative path:
 python ingestion.py .\data
 ```
 
+Show CLI help:
+
+```powershell
+python ingestion.py -h
+```
+
 ## Expected Runtime Behavior
 
 On a successful run, the CLI:
 
 1. Prints a scan banner
-2. Lists each matching file as `[FOUND] <name>`
-3. Exits with code `0`
+2. Prints a separator line
+3. Lists each matching file as `[FOUND] <name>`
+4. If no matching files are found, prints a "no supported files" message with the supported extension list
+5. Exits with code `0`
 
 If the folder does not exist, it prints an error and exits with code `1`.
 
@@ -100,7 +122,7 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 
 See `docs/architecture.md` for the planned full pipeline:
 
-1. Ingestion Engine
+1. Ingestion Engine (currently implemented as a manual CLI trigger)
 2. Extraction Node
 3. NLP + Entity Recognition
 4. Analytics Engine (Descriptive, Diagnostic, Predictive, Prescriptive)
@@ -112,3 +134,23 @@ See `docs/architecture.md` for the planned full pipeline:
 - Prefer asynchronous and streaming patterns for large datasets.
 - Preserve strict read-only behavior for source directories.
 - When adding analytics, classify behavior under one of the four analytics tiers.
+
+## Initial implementation
+
+The repository now contains a minimal Node.js implementation that:
+
+- walks a source directory in read-only mode
+- streams supported text files for ingestion
+- produces descriptive, diagnostic, predictive, and prescriptive analytics in JSON
+
+### Usage
+
+```bash
+npm start -- /absolute/path/to/source-folder
+```
+
+### Testing
+
+```bash
+npm test
+```

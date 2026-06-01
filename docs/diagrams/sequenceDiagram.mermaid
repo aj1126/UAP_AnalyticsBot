@@ -1,0 +1,49 @@
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant O as Orchestrator
+    participant SCN as Directory Scanner
+    participant EXT as File Type Router
+    participant TXT as Async Text Extractor
+    participant META as Metadata Extractor
+    participant FEAT as Feature Builder
+    participant DES as Descriptive Engine
+    participant DIA as Diagnostic Engine
+    participant PRE as Predictive Engine
+    participant PRS as Prescriptive Engine
+    participant REP as Report Generator
+    participant OUT as Output Delivery
+
+    U->>O: Start analysis (source folder, options)
+    O->>SCN: Scan source folder (read-only)
+    SCN-->>O: File manifest
+
+    loop For each file
+        O->>EXT: Route by type
+        EXT->>TXT: Extract text asynchronously
+        EXT->>META: Extract metadata (time, path, size)
+        TXT-->>O: Text payload
+        META-->>O: Metadata payload
+    end
+
+    O->>FEAT: Normalize text + build corpus/time/location features
+    FEAT-->>O: Feature dataset
+
+    O->>DES: Run descriptive analytics
+    DES-->>O: Glossary, frequencies, dates/locations
+
+    O->>DIA: Run diagnostic analytics
+    DIA-->>O: Correlation maps (word vs date/location)
+
+    O->>PRE: Run predictive analytics
+    PRE-->>O: Forecasted keyword/location trends
+
+    O->>PRS: Run prescriptive analytics
+    PRS-->>O: Actions, restructuring suggestions, missing-data flags
+
+    O->>REP: Compose unified analysis report
+    REP-->>O: Final report object
+
+    Note over O,OUT: CSV/Markdown exporters and run-log modules are unplanned for external dev use
+    O->>OUT: Emit JSON report to stdout
+    OUT-->>U: Deliver JSON output
