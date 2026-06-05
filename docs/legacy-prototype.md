@@ -8,7 +8,7 @@ The Python prototype is a legacy reference. It is not the primary execution path
 
 ## Legacy Scope
 
-The prototype in `/tmp/workspace/aj1126/UAP_AnalyticsBot/ingestion.py` provided:
+The prototype in [`../ingestion.py`](../ingestion.py) provided:
 
 - recursive directory scanning with asynchronous generators
 - supported file type filtering for `.pdf`, `.mp4`, `.jpg`, `.jpeg`, and `.png`

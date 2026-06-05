@@ -15,14 +15,23 @@ function pathExists(relativePath) {
     return fs.existsSync(path.join(repositoryRoot, relativePath));
 }
 
+function readFileSafely(relativePath, failures) {
+    try {
+        return readFile(relativePath);
+    } catch (error) {
+        failures.push(`Unable to read ${relativePath}: ${error instanceof Error ? error.message : String(error)}`);
+        return null;
+    }
+}
+
 function main() {
     const docsSource = loadJson('docs/docs-source.json');
     const packageJson = loadJson('package.json');
     const readme = readFile('README.md');
-    const architecture = readFile('docs/architecture.md');
-    const legacyPrototype = readFile('docs/legacy-prototype.md');
 
     const failures = [];
+    const architecture = readFileSafely('docs/architecture.md', failures);
+    const legacyPrototype = readFileSafely('docs/legacy-prototype.md', failures);
 
     for (const command of docsSource.commands) {
         if (!packageJson.scripts?.[command.script]) {
@@ -65,7 +74,7 @@ function main() {
         failures.push('README.md is missing the primary Node CLI command.');
     }
 
-    if (!architecture.includes('## Current Implementation') || !architecture.includes('## Planned Expansion')) {
+    if (architecture && (!architecture.includes('## Current Implementation') || !architecture.includes('## Planned Expansion'))) {
         failures.push('docs/architecture.md must include Current Implementation and Planned Expansion sections.');
     }
 
@@ -77,12 +86,12 @@ function main() {
             failures.push(`Missing diagram file: ${diagramPath}`);
         }
 
-        if (!architecture.includes(diagramPath.replace('docs/', ''))) {
+        if (architecture && !architecture.includes(diagramPath.replace('docs/', ''))) {
             failures.push(`docs/architecture.md should reference ${diagramPath}.`);
         }
     }
 
-    if (!legacyPrototype.includes('# Legacy Python Prototype')) {
+    if (legacyPrototype && !legacyPrototype.includes('# Legacy Python Prototype')) {
         failures.push('docs/legacy-prototype.md is missing its expected title.');
     }
 
