@@ -13,7 +13,7 @@ async function createFixtureDirectory() {
         path.join(fixtureRoot, 'report-one.txt'),
         [
             'Date: 2024-01-01',
-            'Location: Roswell',
+            'LOCATION: Roswell',
             'Lights appeared in Roswell and hovered over the desert.'
         ].join('\n')
     );
@@ -23,7 +23,7 @@ async function createFixtureDirectory() {
         [
             'Date: 2024-02-14',
             'Location: Phoenix',
-            'A bright triangle was reported in Phoenix near the mountains.'
+            'A bright triangle was reported NEAR Phoenix and hovered briefly.'
         ].join('\n')
     );
 

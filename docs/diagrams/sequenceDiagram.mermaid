@@ -1,9 +1,9 @@
 sequenceDiagram
     autonumber
     actor U as User
-    participant O as Orchestrator
+    participant O as Node CLI Orchestrator (current)
     participant SCN as Directory Scanner
-    participant EXT as File Type Router
+    participant EXT as Text File Router
     participant TXT as Async Text Extractor
     participant META as Metadata Extractor
     participant FEAT as Feature Builder
@@ -13,6 +13,7 @@ sequenceDiagram
     participant PRS as Prescriptive Engine
     participant REP as Report Generator
     participant OUT as Output Delivery
+    participant PLN as Planned Expansion
 
     U->>O: Start analysis (source folder, options)
     O->>SCN: Scan source folder (read-only)
@@ -44,6 +45,7 @@ sequenceDiagram
     O->>REP: Compose unified analysis report
     REP-->>O: Final report object
 
-    Note over O,OUT: CSV/Markdown exporters and run-log modules are unplanned for external dev use
+    Note over O,OUT: Current output is a JSON report written to stdout
     O->>OUT: Emit JSON report to stdout
     OUT-->>U: Deliver JSON output
+    Note over PLN: Future work includes multimedia extraction, NER, and alternate delivery surfaces

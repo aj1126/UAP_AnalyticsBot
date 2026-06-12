@@ -1,13 +1,13 @@
 flowchart LR
     U[User / Operator] --> C[Run Analysis Command]
 
-    C --> O[Orchestrator]
+    C --> O[Node CLI Orchestrator<br/>(current)]
     O --> CFG[Config: source folder, filters, run options]
 
-    subgraph Ingestion [Read-Only Ingestion Layer]
+    subgraph Ingestion [Read-Only Ingestion Layer (current)]
         S[(Local Source Folder)]
         SCN[Directory Scanner]
-        EXT[File Type Router]
+        EXT[Text File Router]
         TXT[Async Text Extractor]
         META[Metadata Extractor<br/>timestamps, path, size]
         S --> SCN --> EXT
@@ -15,12 +15,12 @@ flowchart LR
         EXT --> META
     end
 
-    subgraph Processing [Normalization & Feature Layer]
+    subgraph Processing [Normalization & Feature Layer (current)]
         CLEAN[Text Cleaning / Tokenization]
         IDX[Corpus Index + Time/Location Features]
     end
 
-    subgraph Analytics [Analytics Engine]
+    subgraph Analytics [Analytics Engine (current)]
         D1[Descriptive Analytics<br/>glossary, frequency, dates/locations]
         D2[Diagnostic Analytics<br/>word ↔ date/location correlation]
         D3[Predictive Analytics<br/>trend forecasting]
@@ -28,9 +28,15 @@ flowchart LR
     end
 
     subgraph Outputs [Reporting & Delivery]
-        REP[Structured Analysis Report (JSON)]
-        EXP[Unplanned for external dev use:<br/>CSV / Markdown Export Modules]
-        LOG[Unplanned for external dev use:<br/>Run Logs & Traceability Modules]
+        REP[Structured Analysis Report (JSON)<br/>(current)]
+        EXP[CSV / Markdown Export Modules<br/>(planned)]
+        LOG[Run Logs & Traceability Modules<br/>(planned)]
+    end
+
+    subgraph Planned [Planned Expansion]
+        BIN[Binary / Multimedia Extraction]
+        NER[NLP + Entity Recognition]
+        DASH[Dashboard Delivery]
     end
 
     O --> Ingestion
@@ -45,5 +51,8 @@ flowchart LR
     D4 --> REP
     REP --> EXP
     REP --> LOG
+    EXT -. future routing .-> BIN
+    BIN -. future enrichment .-> NER
+    REP -. future delivery .-> DASH
 
     S -. non-destructive access .-> SCN

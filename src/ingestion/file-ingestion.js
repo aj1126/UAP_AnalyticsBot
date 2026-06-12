@@ -34,8 +34,8 @@ function extractDates(text) {
 }
 
 function extractLocations(text) {
-    const metadataPattern = /\b(?:location|city|site)\s*:\s*([A-Z][a-zA-Z]+(?:[ -][A-Z][a-zA-Z]+)*)/gi;
-    const sentencePattern = /\b(?:in|at|near)\s+([A-Z][a-zA-Z]+(?:[ -][A-Z][a-zA-Z]+)*)/gi;
+    const metadataPattern = /\b(?:location|city|site)\s*:\s*((?-i:\p{Lu})\p{L}+(?:[ -](?-i:\p{Lu})\p{L}+)*)/giu;
+    const sentencePattern = /\b(?:in|at|near)\s+((?-i:\p{Lu})\p{L}+(?:[ -](?-i:\p{Lu})\p{L}+)*)/giu;
     const locations = new Set();
 
     for (const pattern of [metadataPattern, sentencePattern]) {
