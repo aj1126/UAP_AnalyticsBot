@@ -4,10 +4,10 @@ This document tracks the active expansion phases for the AnalyticsBot pipeline.
 
 ## Stage 1: Extraction Node Upgrade (NLP Integration)
 **Goal:** Replace hardcoded Regex date/location extraction with Named Entity Recognition (NER).
-- [ ] Install NLP library (e.g., `npm install compromise`).
-- [ ] Refactor `extractDates` in `src/ingestion/file-ingestion.js` to use NLP `#Date` tagging.
-- [ ] Refactor `extractLocations` in `src/ingestion/file-ingestion.js` to use NLP `#Place` tagging.
-- [ ] Ensure the output schema matches the existing `dates: []` and `locations: []` arrays so downstream analytics engines do not break.
+- [x] Install NLP library (e.g., `npm install compromise`).
+- [x] Refactor `extractDates` in `src/ingestion/file-ingestion.js` to use NLP `#Date` tagging.
+- [x] Refactor `extractLocations` in `src/ingestion/file-ingestion.js` to use NLP `#Place` tagging.
+- [x] Ensure the output schema matches the existing `dates: []` and `locations: []` arrays so downstream analytics engines do not break.
 
 ## Stage 2: Multimedia Ingestion Routing
 **Goal:** Reintroduce legacy Python capabilities to parse PDFs and Images via the Node pipeline.

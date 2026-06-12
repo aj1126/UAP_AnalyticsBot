@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const readline = require('node:readline');
 const { promises: fsp } = require('node:fs');
+const nlp = require('compromise'); // <-- Injected NLP Library
 
 const TEXT_EXTENSIONS = new Set(['.txt', '.md', '.json', '.csv', '.log']);
 
@@ -28,24 +29,16 @@ function normalizeWords(text) {
         .match(/[a-z0-9']+/g) ?? [];
 }
 
+// Replaced Regex with NLP #Date tagging
 function extractDates(text) {
-    const datePattern = /\b(?:\d{4}-\d{2}-\d{2}|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+\d{1,2},\s+\d{4})\b/gi;
-    return [...new Set(text.match(datePattern) ?? [])];
+    const doc = nlp(text);
+    return [...new Set(doc.dates().out('array'))];
 }
 
+// Replaced Regex with NLP #Place tagging
 function extractLocations(text) {
-    const metadataPattern = /\b(?:location|city|site)\s*:\s*((?-i:\p{Lu})\p{L}+(?:[ -](?-i:\p{Lu})\p{L}+)*)/giu;
-    const sentencePattern = /\b(?:in|at|near)\s+((?-i:\p{Lu})\p{L}+(?:[ -](?-i:\p{Lu})\p{L}+)*)/giu;
-    const locations = new Set();
-
-    for (const pattern of [metadataPattern, sentencePattern]) {
-        let match;
-        while ((match = pattern.exec(text)) !== null) {
-            locations.add(match[1]);
-        }
-    }
-
-    return [...locations];
+    const doc = nlp(text);
+    return [...new Set(doc.places().out('array'))];
 }
 
 async function readTextFile(filePath, rootDirectory) {

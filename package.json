@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/aj1126/UAP_AnalyticsBot/issues"
   },
-  "homepage": "https://github.com/aj1126/UAP_AnalyticsBot#readme"
+  "homepage": "https://github.com/aj1126/UAP_AnalyticsBot#readme",
+  "dependencies": {
+    "compromise": "^14.15.1"
+  }
 }
