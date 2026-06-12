@@ -18,10 +18,10 @@ This document tracks the active expansion phases for the AnalyticsBot pipeline.
 
 ## Stage 3: Alternate Delivery Surfaces
 **Goal:** Abstract the output layer to support CSV and Markdown reports instead of just stdout JSON.
-- [ ] Create `src/delivery/` directory.
-- [ ] Implement `src/delivery/markdown-generator.js`.
-- [ ] Update `src/index.js` to accept CLI flags (e.g., `--format=md`).
-- [ ] Route generated reports to a local ignored folder (e.g., `/data_exports/`).
+- [x] Create `src/delivery/` directory.
+- [x] Implement `src/delivery/markdown-generator.js`.
+- [x] Update `src/index.js` to accept CLI flags (e.g., `--format=md`).
+- [x] Route generated reports to a local ignored folder (e.g., `/data_exports/`).
 
 ## Stage 4: Continuous Event Loop
 **Goal:** Allow the bot to monitor a directory and update analytics dynamically.
