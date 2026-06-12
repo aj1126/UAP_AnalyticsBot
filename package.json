@@ -20,6 +20,8 @@
   },
   "homepage": "https://github.com/aj1126/UAP_AnalyticsBot#readme",
   "dependencies": {
-    "compromise": "^14.15.1"
+    "compromise": "^14.15.1",
+    "pdf-parse": "^2.4.5",
+    "tesseract.js": "^7.0.0"
   }
 }
