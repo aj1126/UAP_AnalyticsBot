@@ -14,3 +14,7 @@ When writing analytical functions, categorize them strictly into these four tier
 2.  **Diagnostic:** Correlation maps linking specific word usage rates to specific dates or locations (Why did it happen?).
 3.  **Predictive:** Trend forecasting based on historical file timestamps, projecting future keyword frequencies or location clusters (What is likely to happen?).
 4.  **Prescriptive:** Actionable output generation, such as recommending folder restructuring based on topic clusters or flagging missing data points (What should we do?).
+
+## Current Objectives
+* When suggesting new features, refer to `docs/ROADMAP.md` to align with the current development stage.
+* The immediate priority is Stage 1: NLP Integration.
