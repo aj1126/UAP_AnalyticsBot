@@ -50,12 +50,17 @@
       "description": "Node test coverage for core pipeline behavior."
     },
     {
+    {
       "path": "docs/architecture.md",
       "description": "Hand-authored architecture overview for current and planned system design."
     },
     {
       "path": "docs/legacy-prototype.md",
       "description": "Historical Python prototype reference."
+    },
+    {
+      "path": "docs/ROADMAP.md",
+      "description": "Active development tracker and planned stages."
     }
   ],
   "requiredDocs": [
