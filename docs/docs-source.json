@@ -50,7 +50,6 @@
       "description": "Node test coverage for core pipeline behavior."
     },
     {
-    {
       "path": "docs/architecture.md",
       "description": "Hand-authored architecture overview for current and planned system design."
     },
