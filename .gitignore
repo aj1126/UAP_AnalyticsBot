@@ -1,4 +1,10 @@
 # =========================
+# Node & Dependencies
+# =========================
+node_modules/
+npm-debug.log*
+
+# =========================
 # Python & Environments
 # =========================
 __pycache__/
