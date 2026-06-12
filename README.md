@@ -78,6 +78,7 @@ The current Node ingestion pipeline only analyzes text-oriented files.
 - `test/pipeline.test.js` — Node test coverage for core pipeline behavior.
 - `docs/architecture.md` — Hand-authored architecture overview for current and planned system design.
 - `docs/legacy-prototype.md` — Historical Python prototype reference.
+- `docs/ROADMAP.md` — Active development tracker and planned stages.
 <!-- GENERATED:repo-layout:END -->
 
 ## Testing
