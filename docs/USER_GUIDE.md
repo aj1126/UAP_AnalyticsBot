@@ -1,0 +1,80 @@
+# UAP AnalyticsBot: Installation & Usage Guide
+
+The UAP AnalyticsBot is a local, Node-based CLI tool designed to scan a target directory, extract text and metadata, and serialize a comprehensive analytics report into JSON. 
+
+The core execution pipeline operates entirely in **read-only mode**. It utilizes asynchronous data streams to process files without bottlenecking system memory, and it will strictly never modify, move, or delete your original source files.
+
+## Prerequisites
+
+Before installing the bot, ensure your system has the following dependencies installed:
+
+1. **Node.js** (v22 or higher recommended)
+2. **Git** (for cloning the repository)
+
+## Installation
+
+Open Windows PowerShell and execute the following commands to clone the repository and install the required Node modules.
+
+```powershell
+# 1. Clone the repository to your local machine
+git clone [https://github.com/aj1126/UAP_AnalyticsBot.git](https://github.com/aj1126/UAP_AnalyticsBot.git)
+
+# 2. Navigate into the project directory
+cd .\UAP_AnalyticsBot\
+
+# 3. Install the required dependencies
+npm install
+```
+
+## Running the Bot
+
+The CLI requires a target directory to scan. You pass this path as an argument after the `--` flag.
+
+```powershell
+# Syntax
+npm start -- "C:\Absolute\Path\To\Your\Source\Folder"
+
+# Example
+npm start -- "C:\Users\Public\Documents\Project_Perseus_Lore"
+```
+
+If you do not provide a path, the bot will default to scanning its own current working directory (which is usually not what you want for data analysis).
+
+### Understanding the Output
+
+Upon a successful run, the bot outputs a highly structured JSON report directly to your terminal (`stdout`). The report is divided into four analytical tiers:
+
+1. **Descriptive:** Extracts term frequencies, standardizes glossaries, and isolates hard dates/locations.
+2. **Diagnostic:** Maps correlation matrices (e.g., specific word usage rates tied to specific dates or locations).
+3. **Predictive:** Forecasts keyword and location trends based on the chronological timeline of file modifications.
+4. **Prescriptive:** Flags files missing crucial metadata (dates/locations) and recommends folder restructuring for better topic clustering.
+
+*Tip: To save the JSON output to a file instead of reading it in the terminal, you can pipe the output in PowerShell:*
+```powershell
+npm start -- "C:\Path\To\Folder" > analytics_report.json
+```
+
+## Supported File Types
+
+Currently, the ingestion engine natively parses the following text-based extensions:
+* `.txt`
+* `.md`
+* `.json`
+* `.csv`
+* `.log`
+
+*(Note: Binary and multimedia extraction, such as PDF parsing and Image OCR, are tracked for a future development stage).*
+
+## Testing & Validation
+
+If you are modifying the codebase or want to verify the pipeline's integrity on your machine, you can run the built-in test suite:
+
+```powershell
+npm test
+```
+
+If you modify the core architecture or supported commands, regenerate the automated `README.md` documentation by running:
+
+```powershell
+npm run docs:generate
+```

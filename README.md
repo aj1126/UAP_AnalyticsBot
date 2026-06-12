@@ -79,6 +79,7 @@ The current Node ingestion pipeline only analyzes text-oriented files.
 - `docs/architecture.md` — Hand-authored architecture overview for current and planned system design.
 - `docs/legacy-prototype.md` — Historical Python prototype reference.
 - `docs/ROADMAP.md` — Active development tracker and planned stages.
+- `docs/USER_GUIDE.md` — Installation and execution instructions for end-users.
 <!-- GENERATED:repo-layout:END -->
 
 ## Testing

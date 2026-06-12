@@ -60,6 +60,10 @@
     {
       "path": "docs/ROADMAP.md",
       "description": "Active development tracker and planned stages."
+    },
+    {
+      "path": "docs/USER_GUIDE.md",
+      "description": "Installation and execution instructions for end-users."
     }
   ],
   "requiredDocs": [
