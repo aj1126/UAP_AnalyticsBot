@@ -14,7 +14,7 @@ function updateSection(documentText, sectionName, renderedSection) {
     const endMarker = `<!-- GENERATED:${sectionName}:END -->`;
 
     const startIndex = documentText.indexOf(startMarker);
-    const endIndex = documentText.indexOf(endMarker);
+    const endIndex = documentText.indexOf(endMarker, startIndex + startMarker.length);
 
     if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
         throw new Error(`Missing generated section markers for "${sectionName}" in README.md`);
