@@ -48,14 +48,16 @@ async function main() {
 
     const options = { clearCache, workers };
 
-    if (isWatchMode) {
+if (isWatchMode) {
         process.stdout.write(`👀 Watching directory for changes: ${sourceDirectory}\n`);
         const watcher = chokidar.watch(sourceDirectory, {
-            ignored: [/(^|[\/\\])\../, /node_modules/, /data_exports/],
+            // 🧹 Minor polish: Restrict ignored regex to strict ends-with path
+            ignored: [/(^|[\/\\])\../, /node_modules/, /data_exports[\/\\]?$/],
             persistent: true, ignoreInitial: false
         });
 
         let timeout;
+        let pipelineQueue = Promise.resolve();
         const triggerPipeline = () => {
             clearTimeout(timeout);
             timeout = setTimeout(() => {

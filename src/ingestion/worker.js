@@ -2,6 +2,8 @@ const path = require('node:path');
 const { parentPort } = require('node:worker_threads');
 const fs = require('node:fs/promises');
 
+const SUPPORTED_TEXT_EXTENSIONS = new Set(['.txt', '.md', '.json', '.csv', '.log']);
+
 // ✨ Advanced Stop-Word Culling Dictionary
 const STOP_WORDS = new Set([
     'a', 'about', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
@@ -11,6 +13,16 @@ const STOP_WORDS = new Set([
 
 parentPort.on('message', async (task) => {
     try {
+        const extension = path.extname(task.filePath).toLowerCase();
+        if (!SUPPORTED_TEXT_EXTENSIONS.has(extension)) {
+            parentPort.postMessage({
+                success: true,
+                filePath: task.filePath,
+                fingerprint: task.fingerprint
+            });
+            return;
+        }
+
         const content = await fs.readFile(task.filePath, 'utf-8');
         const stats = await fs.stat(task.filePath);
         
@@ -18,19 +30,23 @@ parentPort.on('message', async (task) => {
         const locations = [];
 
         // Filter out punctuation, make lowercase, and cull stop words
-        const words = content
+        const rawWords = content
             .replace(/[^\w\s]/g, '')
             .toLowerCase()
             .split(/\s+/)
             .filter(word => word.length > 1 && !STOP_WORDS.has(word));
 
-        // Extract all dates and locations (not just the first occurrence)
+        // 🚀 OPTIMIZATION: Calculate map inside worker to drastically reduce IPC channel memory usage
+        const wordFrequency = {};
+        for(const word of rawWords) {
+            wordFrequency[word] = (wordFrequency[word] || 0) + 1;
+        }
+
         for (const match of content.matchAll(/Date:\s*(\d{4}-\d{2}-\d{2})/gi)) {
             dates.push(match[1]);
         }
 
         for (const match of content.matchAll(/Location:\s*([A-Za-z]+)/gi)) {
-            // SPRINT 2 Task 1: Named Entity Token Unification
             const loc = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
             locations.push(loc);
         }
@@ -42,11 +58,12 @@ parentPort.on('message', async (task) => {
             result: {
                 fileName: task.filePath.split(/[/\\]/).pop(),
                 relativePath: task.rootDirectory ? path.relative(task.rootDirectory, task.filePath) : task.filePath,
-                extension: path.extname(task.filePath).toLowerCase(),
+                extension,
                 size: stats.size,
                 modifiedAt: stats.mtime.toISOString(),
-                content,
-                words,
+                wordFrequency, 
+                totalWords: rawWords.length,
+                uniqueWords: Object.keys(wordFrequency),
                 dates,
                 locations
             }

@@ -48,11 +48,14 @@ function fillEmptyIntervals(orderedMonths, timeline) {
 function buildKeywordSeries(files) {
     const timeline = {};
     for (const file of files) {
-        if(!file.modifiedAt) continue;
-        const key = monthKey(file.modifiedAt);
+        // 🚨 FIX: Extract historical dates first, fallback to OS modification if none exist
+        const documentDate = (file.dates && file.dates.length > 0) ? file.dates[0] : file.modifiedAt;
+        if (!documentDate) continue;
+
+        const key = monthKey(documentDate);
         if (!timeline[key]) timeline[key] = { totalWords: 0, locations: {} };
 
-        timeline[key].totalWords += (file.words || []).length;
+        timeline[key].totalWords += file.totalWords || (file.words || []).length;
         for (const location of (file.locations || [])) {
             timeline[key].locations[location] = (timeline[key].locations[location] ?? 0) + 1;
         }
