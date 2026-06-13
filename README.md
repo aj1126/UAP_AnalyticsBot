@@ -125,6 +125,49 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 - When adding analytics, classify behavior under one of the four analytics tiers.
 - Update [docs/architecture.md](docs/architecture.md) when implementation changes affect current-vs-planned system boundaries.
 
+
+<br>
+
+
+
+## ⚙️ Installation & Setup
+
+**Prerequisites:** Ensure you have [Node.js](https://nodejs.org/) installed (version 18, 20, or 22+ recommended).
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/aj1126/uap_analyticsbot.git
+cd uap_analyticsbot
+
+```
+
+
+2. **Install dependencies:**
+Because this engine utilizes pre-compiled WebAssembly, there are no complex C++ build tools or `node-gyp` configurations required on Windows. Simply run:
+```bash
+npm install
+
+```
+
+
+3. **Verify the installation:**
+Run the local test suite to ensure the multithreaded worker pool and caching engine are functioning correctly on your machine:
+```bash
+npm test
+
+```
+
+
+*(If all tests pass green, you are ready to start analyzing documents!)*
+
+
+---
+
+<br>
+
+
+
+
 ## Usage
 
 
@@ -169,6 +212,8 @@ The v1.2.0 AnalyticsBot engine supports multithreading and memoization caching. 
 * `node src/index.js ./my_folder --clear-cache` : Bypasses the `.analytics_cache.json` file and forces a fresh read of all documents.
 * `node src/index.js ./my_folder --format=csv` : Exports the final report as a spreadsheet-compatible `.csv` file.
 
+<br>
+<br>
 <br>
 
 
