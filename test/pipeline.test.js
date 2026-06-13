@@ -77,7 +77,7 @@ test('generateAnalyticsReport processes PDF files and extracts metadata', async 
 
         // Assertions
         assert.equal(report.descriptive.fileCount, 1);
-        assert.ok(report.files.some(f => f.extension === '.pdf'));
+        assert.ok(report.descriptive.files.some(f => f.extension === '.pdf'));
         assert.deepEqual(report.descriptive.locations, ['Phoenix']);
         assert.deepEqual(report.descriptive.dates, ['2025-05-05']);
         

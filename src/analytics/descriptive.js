@@ -29,7 +29,8 @@ function buildDescriptiveAnalytics(files) {
             modifiedAt: file.modifiedAt,
             wordCount: file.words.length,
             dates: file.dates,
-            locations: file.locations
+            locations: file.locations,
+            metadata: file.metadata || {} // <-- FIX: Propagate metadata to the final report
         }))
     };
 }

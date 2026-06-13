@@ -14,6 +14,14 @@ const SUPPORTED_EXTENSIONS = new Set([
     ".pdf",
 ]);
 
+const STOP_WORDS = new Set([
+    "the", "of", "to", "and", "in", "a", "for", "on", "that", "is", "it", 
+    "with", "as", "was", "at", "by", "be", "this", "an", "are", "from", 
+    "or", "which", "will", "not", "have", "has", "but", "they", "their", 
+    "we", "you", "i", "he", "she", "my", "his", "her", "its", "our", "your",
+    "there", "can", "if", "would", "about", "who", "what", "where", "when", "how"
+]);
+
 async function* walkFiles(rootDirectory) {
     const directoryEntries = await fsp.readdir(rootDirectory, {
         withFileTypes: true,
@@ -34,7 +42,21 @@ async function* walkFiles(rootDirectory) {
 }
 
 function normalizeWords(text) {
-    return text.toLowerCase().match(/[a-z0-9']+/g) ?? [];
+    const rawWords = text.toLowerCase().match(/[a-z0-9']+/g) ?? [];
+    
+    return rawWords.filter(word => {
+        // 1. Drop standard grammatical "glue"
+        if (STOP_WORDS.has(word)) return false;
+        
+        // 2. Drop pure numbers and OCR noise (e.g., '00', '1', '10')
+        // isNaN returns false for valid numbers, so !isNaN catches them
+        if (!isNaN(word)) return false;
+        
+        // 3. Drop stray single-character artifacts 
+        if (word.length <= 1) return false;
+
+        return true;
+    });
 }
 
 function extractDates(text) {
