@@ -46,7 +46,6 @@ function extractLocations(text) {
     const doc = nlp(text);
 
     const knownPlaces = doc.match("#Place").out("array");
-
     const contextualPlaces = doc
         .match("(in|at|near|location) #ProperNoun")
         .not("(in|at|near|location)")
@@ -77,7 +76,7 @@ async function readFileData(filePath, rootDirectory) {
     const words = [];
     const dates = new Set();
     const locations = new Set();
-    let metadata = {};
+    let metadata = {}; 
 
     try {
         if (TEXT_EXTENSIONS.has(extension)) {
@@ -91,38 +90,58 @@ async function readFileData(filePath, rootDirectory) {
                 await processTextData(line, words, dates, locations);
             }
             stream.destroy();
-} else if (extension === '.pdf') {
+            
+        } else if (extension === ".pdf") {
             const dataBuffer = await fsp.readFile(filePath);
+            let extractedText = "";
 
-            // Access the function explicitly as pdfParse.pdf based on version 2.4.5
-            const parseFn = pdfParse.pdf;
-
-            if (typeof parseFn !== 'function') {
-                throw new Error("Could not find callable 'pdf' function in pdf-parse v2.4.5.");
+            try {
+                // 1. Fast Path: Attempt standard digital text extraction
+                const parseFn = typeof pdfParse === "function" ? pdfParse : pdfParse.default;
+                const pdfData = await parseFn(dataBuffer, {
+                    pagerender: (pageData) => {
+                        return pageData.getTextContent().then((textContent) => {
+                            return textContent.items.map((s) => s.str).join(" ");
+                        });
+                    },
+                });
+                extractedText = pdfData.text || "";
+                metadata = pdfData.info || {};
+            } catch (err) {
+                // Ignore standard parse failure, will trigger OCR fallback
             }
 
-            const pdfData = await parseFn(dataBuffer, {
-                pagerender: (pageData) => {
-                    return pageData.getTextContent().then((textContent) => {
-                        return textContent.items.map((s) => s.str).join(' ');
-                    });
-                },
-            });
+            // 2. Automated OCR Fallback using WebAssembly (mupdf)
+            if (extractedText.trim().length < 50) {
+                process.stdout.write(`\n🔍 Scanned PDF detected: ${path.basename(filePath)}. Rasterizing via WebAssembly...\n`);
+                
+                try {
+                    // Dynamically import mupdf to bypass CommonJS/ESM module boundaries
+                    const mupdf = await import("mupdf");
+                    
+                    // Open document natively in memory
+                    const doc = mupdf.Document.openDocument(dataBuffer, "application/pdf");
+                    const pageCount = doc.countPages();
+                    extractedText = ""; // Clear any garbage data
+                    
+                    for (let i = 0; i < pageCount; i++) {
+                        const page = doc.loadPage(i);
+                        // Scale 2x for higher resolution (better OCR accuracy)
+                        const pixmap = page.toPixmap(mupdf.Matrix.scale(2, 2), mupdf.ColorSpace.DeviceRGB, false);
+                        const pngBuffer = Buffer.from(pixmap.asPNG());
+                        
+                        const { data: { text } } = await tesseract.recognize(pngBuffer, "eng", {
+                            logger: () => {},  // Suppress console spam
+                        });
+                        extractedText += text + " ";
+                    }
+                } catch (ocrError) {
+                    process.stdout.write(`\n⚠️ OCR Failed for ${path.basename(filePath)}: ${ocrError.message}\n`);
+                }
+            }
 
-            await processTextData(pdfData.text, words, dates, locations);
-
-            return {
-                path: filePath,
-                relativePath: path.relative(rootDirectory, filePath),
-                extension,
-                size: stats.size,
-                createdAt: stats.birthtime.toISOString(),
-                modifiedAt: stats.mtime.toISOString(),
-                words,
-                dates: [...dates],
-                locations: [...locations],
-                metadata: pdfData.info,
-            };
+            await processTextData(extractedText, words, dates, locations);
+            
         } else if (IMAGE_EXTENSIONS.has(extension)) {
             const {
                 data: { text },
@@ -145,7 +164,7 @@ async function readFileData(filePath, rootDirectory) {
         words,
         dates: [...dates],
         locations: [...locations],
-        metadata,
+        metadata, 
     };
 }
 

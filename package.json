@@ -22,6 +22,7 @@
   "dependencies": {
     "chokidar": "^5.0.0",
     "compromise": "^14.15.1",
+    "mupdf": "^1.27.0",
     "pdf-parse": "^2.4.5",
     "tesseract.js": "^7.0.0"
   }
