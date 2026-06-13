@@ -35,3 +35,17 @@ This document tracks the active expansion phases for the AnalyticsBot pipeline.
 - [x] Implement PDF metadata extraction (Author, CreationDate) to augment `Metadata Extractor`.
 - [x] Update `test/pipeline.test.js` with a mock PDF fixture to validate multi-page parsing.
 - [x] Test Resulting in successfull pdf file ingestion, parse and output.
+
+
+## Feature Roadmap / Optional Modules
+
+| Category | Feature | Target Release | Status |
+| :--- | :--- | :--- | :--- |
+| **Performance** | Multithreaded Ingestion | v1.1.0 | Optional (Planned) |
+| **Performance** | Ingestion Caching | v1.1.0 | Optional (Planned) |
+| **NLP** | Entity Unification | v1.1.0 | Optional (Planned) |
+| **NLP** | Advanced Stop-Word Culling | v1.1.0 | Optional (Planned) |
+| **Diagnostics** | TF-IDF Weighting | v1.2.0 | Optional (Planned) |
+| **Diagnostics** | Semantic Similarity | v1.2.0 | Optional (Planned) |
+| **Predictive** | Time-Series Clustering | v1.2.0 | Optional (Planned) |
+| **Prescriptive** | Metadata Validation | v1.2.0 | Optional (Planned) |
