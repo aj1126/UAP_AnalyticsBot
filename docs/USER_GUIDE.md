@@ -17,7 +17,7 @@ Open Windows PowerShell and execute the following commands to clone the reposito
 
 ```powershell
 # 1. Clone the repository to your local machine
-git clone [https://github.com/aj1126/UAP_AnalyticsBot.git](https://github.com/aj1126/UAP_AnalyticsBot.git)
+git clone https://github.com/aj1126/UAP_AnalyticsBot.git
 
 # 2. Navigate into the project directory
 cd .\UAP_AnalyticsBot\
