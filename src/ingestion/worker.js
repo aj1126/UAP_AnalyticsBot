@@ -4,8 +4,6 @@ const path = require("node:path");
 const readline = require("node:readline");
 const { promises: fsp } = require("node:fs");
 const nlp = require("compromise");
-const pdfParse = require("pdf-parse");
-const tesseract = require("tesseract.js");
 
 const TEXT_EXTENSIONS = new Set([".txt", ".md", ".json", ".csv", ".log"]);
 const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg"]);
@@ -63,15 +61,20 @@ async function readFileData(filePath, rootDirectory) {
         let extractedText = "";
 
         try {
+            // LAZY LOAD: Prevents memory exhaustion for non-PDFs
+            const pdfParse = require("pdf-parse"); 
             const parseFn = typeof pdfParse === "function" ? pdfParse : pdfParse.default;
             const pdfData = await parseFn(dataBuffer);
             extractedText = pdfData.text || "";
             metadata = pdfData.info || {};
-        } catch (err) { /* Let OCR Fallback handle it */ }
+        } catch (err) { /* OCR Fallback */ }
 
         if (extractedText.trim().length < 50) {
             try {
+                // LAZY LOAD: Heavy WASM engines only spin up if strictly necessary
                 const mupdf = await import("mupdf");
+                const tesseract = require("tesseract.js");
+                
                 const doc = mupdf.Document.openDocument(dataBuffer, "application/pdf");
                 let ocrText = ""; 
                 for (let i = 0; i < doc.countPages(); i++) {
@@ -80,18 +83,15 @@ async function readFileData(filePath, rootDirectory) {
                     const { data: { text } } = await tesseract.recognize(Buffer.from(pixmap.asPNG()), "eng", { logger: () => {} });
                     ocrText += text + " ";
                 }
-                
-                // Only overwrite if OCR actually succeeded
-                if (ocrText.trim().length > 0) {
-                    extractedText = ocrText;
-                }
+                if (ocrText.trim().length > 0) extractedText = ocrText;
             } catch (ocrError) {
-                // FIXED: Do NOT throw an error here. 
-                // If OCR fails (like on mock test PDFs), silently fall back to whatever text `pdfParse` managed to scrape.
+                // Silently fall back to parsed text if WebAssembly aborts on corrupted scans
             }
         }
         await processTextData(extractedText, words, dates, locations);
     } else if (IMAGE_EXTENSIONS.has(extension)) {
+        // LAZY LOAD
+        const tesseract = require("tesseract.js");
         const { data: { text } } = await tesseract.recognize(filePath, "eng", { logger: () => {} });
         await processTextData(text, words, dates, locations);
     }
