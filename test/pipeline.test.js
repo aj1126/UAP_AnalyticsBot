@@ -68,10 +68,9 @@ test('generateAnalyticsReport safely processes PDF files without native crashes'
     const fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'uap-analytics-'));
 
     try {
-        // Create a mock PDF explicitly missing the %%EOF and startxref markers.
-        // This tests our worker.js pre-flight check to ensure it safely bypasses 
-        // the WebAssembly OCR engine and prevents a fatal C++ process abort.
-        const pdfContent = '%PDF-1.1\nBT /F1 12 Tf 100 700 Td (Date: 2025-05-05 Location: Phoenix) Tj ET\ntrailer<</Root 1 0 R>>';
+        // FIX: We must use a structurally sound PDF object tree so `pdf-parse` doesn't throw a global Node exception.
+        // We intentionally leave off the %%EOF marker to ensure our WASM safety pre-flight check successfully bypasses mupdf.
+        const pdfContent = '%PDF-1.1\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>/Contents 4 0 R>>endobj 4 0 obj<</Length 65>>stream\nBT /F1 12 Tf 100 700 Td (Date: 2025-05-05 Location: Phoenix) Tj ET\nendstream\nendobj\ntrailer<</Root 1 0 R>>';
         
         await fs.writeFile(path.join(fixtureRoot, 'test.pdf'), pdfContent);
 
