@@ -1,17 +1,23 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const readline = require('node:readline');
-const { promises: fsp } = require('node:fs');
-const nlp = require('compromise');
-const pdfParse = require('pdf-parse');
-const tesseract = require('tesseract.js');
+const fs = require("node:fs");
+const path = require("node:path");
+const readline = require("node:readline");
+const { promises: fsp } = require("node:fs");
+const nlp = require("compromise");
+const pdfParse = require("pdf-parse");
+const tesseract = require("tesseract.js");
 
-const TEXT_EXTENSIONS = new Set(['.txt', '.md', '.json', '.csv', '.log']);
-const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg']);
-const SUPPORTED_EXTENSIONS = new Set([...TEXT_EXTENSIONS, ...IMAGE_EXTENSIONS, '.pdf']);
+const TEXT_EXTENSIONS = new Set([".txt", ".md", ".json", ".csv", ".log"]);
+const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg"]);
+const SUPPORTED_EXTENSIONS = new Set([
+    ...TEXT_EXTENSIONS,
+    ...IMAGE_EXTENSIONS,
+    ".pdf",
+]);
 
 async function* walkFiles(rootDirectory) {
-    const directoryEntries = await fsp.readdir(rootDirectory, { withFileTypes: true });
+    const directoryEntries = await fsp.readdir(rootDirectory, {
+        withFileTypes: true,
+    });
 
     for (const entry of directoryEntries) {
         const absolutePath = path.join(rootDirectory, entry.name);
@@ -28,31 +34,26 @@ async function* walkFiles(rootDirectory) {
 }
 
 function normalizeWords(text) {
-    return text
-        .toLowerCase()
-        .match(/[a-z0-9']+/g) ?? [];
+    return text.toLowerCase().match(/[a-z0-9']+/g) ?? [];
 }
 
 function extractDates(text) {
     const doc = nlp(text);
-    return [...new Set(doc.match('#Date').out('array'))];
+    return [...new Set(doc.match("#Date").out("array"))];
 }
 
 function extractLocations(text) {
     const doc = nlp(text);
-    
-    // 1. Get explicitly known places in the base lexicon (like Phoenix)
-    const knownPlaces = doc.match('#Place').out('array');
-    
-    // 2. Syntactic Extraction: Get Proper Nouns following location keywords
-    // We match the keyword + noun, then strip the keyword away, leaving just the noun (Roswell)
-    const contextualPlaces = doc.match('(in|at|near|location) #ProperNoun').not('(in|at|near|location)').out('array');
-    
-    // 3. Combine and deduplicate the arrays
+
+    const knownPlaces = doc.match("#Place").out("array");
+    const contextualPlaces = doc
+        .match("(in|at|near|location) #ProperNoun")
+        .not("(in|at|near|location)")
+        .out("array");
+
     return [...new Set([...knownPlaces, ...contextualPlaces])];
 }
 
-// Extracted text processing logic so it can be shared across file types
 async function processTextData(text, words, dates, locations) {
     if (!text) return;
     words.push(...normalizeWords(text));
@@ -75,27 +76,78 @@ async function readFileData(filePath, rootDirectory) {
     const words = [];
     const dates = new Set();
     const locations = new Set();
+    let metadata = {}; 
 
     try {
         if (TEXT_EXTENSIONS.has(extension)) {
-            // Keep the memory-efficient streaming for standard text logs
-            const stream = fs.createReadStream(filePath, { encoding: 'utf8' });
-            const lineReader = readline.createInterface({ input: stream, crlfDelay: Infinity });
-            
+            const stream = fs.createReadStream(filePath, { encoding: "utf8" });
+            const lineReader = readline.createInterface({
+                input: stream,
+                crlfDelay: Infinity,
+            });
+
             for await (const line of lineReader) {
                 await processTextData(line, words, dates, locations);
             }
             stream.destroy();
-
-        } else if (extension === '.pdf') {
-            // Read PDF buffer directly into memory and parse
+            
+        } else if (extension === ".pdf") {
             const dataBuffer = await fsp.readFile(filePath);
-            const pdfData = await pdfParse(dataBuffer);
-            await processTextData(pdfData.text, words, dates, locations);
+            let extractedText = "";
 
+            try {
+                // 1. Fast Path: Attempt standard digital text extraction
+                const parseFn = typeof pdfParse === "function" ? pdfParse : pdfParse.default;
+                const pdfData = await parseFn(dataBuffer, {
+                    pagerender: (pageData) => {
+                        return pageData.getTextContent().then((textContent) => {
+                            return textContent.items.map((s) => s.str).join(" ");
+                        });
+                    },
+                });
+                extractedText = pdfData.text || "";
+                metadata = pdfData.info || {};
+            } catch (err) {
+                // Ignore standard parse failure, will trigger OCR fallback
+            }
+
+            // 2. Automated OCR Fallback using WebAssembly (mupdf)
+            if (extractedText.trim().length < 50) {
+                process.stdout.write(`\n🔍 Scanned PDF detected: ${path.basename(filePath)}. Rasterizing via WebAssembly...\n`);
+                
+                try {
+                    // Dynamically import mupdf to bypass CommonJS/ESM module boundaries
+                    const mupdf = await import("mupdf");
+                    
+                    // Open document natively in memory
+                    const doc = mupdf.Document.openDocument(dataBuffer, "application/pdf");
+                    const pageCount = doc.countPages();
+                    extractedText = ""; // Clear any garbage data
+                    
+                    for (let i = 0; i < pageCount; i++) {
+                        const page = doc.loadPage(i);
+                        // Scale 2x for higher resolution (better OCR accuracy)
+                        const pixmap = page.toPixmap(mupdf.Matrix.scale(2, 2), mupdf.ColorSpace.DeviceRGB, false);
+                        const pngBuffer = Buffer.from(pixmap.asPNG());
+                        
+                        const { data: { text } } = await tesseract.recognize(pngBuffer, "eng", {
+                            logger: () => {},  // Suppress console spam
+                        });
+                        extractedText += text + " ";
+                    }
+                } catch (ocrError) {
+                    process.stdout.write(`\n⚠️ OCR Failed for ${path.basename(filePath)}: ${ocrError.message}\n`);
+                }
+            }
+
+            await processTextData(extractedText, words, dates, locations);
+            
         } else if (IMAGE_EXTENSIONS.has(extension)) {
-            // Run OCR against image files
-            const { data: { text } } = await tesseract.recognize(filePath, 'eng', { logger: () => {} });
+            const {
+                data: { text },
+            } = await tesseract.recognize(filePath, "eng", {
+                logger: () => {},
+            });
             await processTextData(text, words, dates, locations);
         }
     } catch (error) {
@@ -111,7 +163,8 @@ async function readFileData(filePath, rootDirectory) {
         modifiedAt: stats.mtime.toISOString(),
         words,
         dates: [...dates],
-        locations: [...locations]
+        locations: [...locations],
+        metadata, 
     };
 }
 
@@ -128,10 +181,10 @@ async function ingestDirectory(rootDirectory) {
 
     return {
         sourceDirectory,
-        files
+        files,
     };
 }
 
 module.exports = {
-    ingestDirectory
+    ingestDirectory,
 };
