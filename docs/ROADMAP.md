@@ -31,6 +31,6 @@ This document tracks the active expansion phases for the AnalyticsBot pipeline.
 
 ## Stage 5: Advanced PDF & Structural Analysis
 **Goal:** Improve PDF ingestion by preserving page-level context and metadata.
-- [ ] Refactor `readFileData` to support page-based text content extraction.
-- [ ] Implement PDF metadata extraction (Author, CreationDate) to augment `Metadata Extractor`.
-- [ ] Update `test/pipeline.test.js` with a mock PDF fixture to validate multi-page parsing.
+- [x] Refactor `readFileData` to support page-based text content extraction.
+- [x] Implement PDF metadata extraction (Author, CreationDate) to augment `Metadata Extractor`.
+- [x] Update `test/pipeline.test.js` with a mock PDF fixture to validate multi-page parsing.
