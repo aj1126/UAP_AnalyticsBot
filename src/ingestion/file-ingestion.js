@@ -8,7 +8,9 @@ async function* walkFiles(rootDirectory) {
 
     for (const entry of directoryEntries) {
         const absolutePath = path.join(rootDirectory, entry.name);
-        if (entry.isDirectory()) {
+        if (entry.isSymbolicLink()) {
+            continue; // Skip symlinks to prevent traversal outside the source directory
+        } else if (entry.isDirectory()) {
             yield* walkFiles(absolutePath);
         } else if (entry.isFile()) {
             yield absolutePath;
@@ -33,7 +35,9 @@ async function ingestDirectory(rootDirectory, options = {}) {
         }
     }
 
+    const visitedPaths = new Set();
     for await (const filePath of walkFiles(sourceDirectory)) {
+        visitedPaths.add(filePath);
         const stats = await fsp.stat(filePath);
         const fingerprint = `${stats.size}-${stats.mtimeMs}`; // Size + Modified Time
         
@@ -41,6 +45,13 @@ async function ingestDirectory(rootDirectory, options = {}) {
             files.push(cache[filePath].data); // Short-circuit bypass
         } else {
             pathsToProcess.push({ filePath, fingerprint });
+        }
+    }
+
+    // Evict stale cache keys scoped to this sourceDirectory
+    for (const key of Object.keys(cache)) {
+        if (key.startsWith(sourceDirectory) && !visitedPaths.has(key)) {
+            delete cache[key];
         }
     }
 

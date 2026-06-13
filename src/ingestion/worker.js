@@ -1,3 +1,4 @@
+const path = require('node:path');
 const { parentPort } = require('node:worker_threads');
 const fs = require('node:fs/promises');
 
@@ -15,7 +16,7 @@ parentPort.on('message', async (task) => {
         
         const dates = [];
         const locations = [];
-        
+
         // Filter out punctuation, make lowercase, and cull stop words
         const words = content
             .replace(/[^\w\s]/g, '')
@@ -23,13 +24,14 @@ parentPort.on('message', async (task) => {
             .split(/\s+/)
             .filter(word => word.length > 1 && !STOP_WORDS.has(word));
 
-        const dateMatch = content.match(/Date:\s*(\d{4}-\d{2}-\d{2})/i);
-        if (dateMatch) dates.push(dateMatch[1]);
+        // Extract all dates and locations (not just the first occurrence)
+        for (const match of content.matchAll(/Date:\s*(\d{4}-\d{2}-\d{2})/gi)) {
+            dates.push(match[1]);
+        }
 
-        const locMatch = content.match(/Location:\s*([A-Za-z]+)/i);
-        if (locMatch) {
+        for (const match of content.matchAll(/Location:\s*([A-Za-z]+)/gi)) {
             // SPRINT 2 Task 1: Named Entity Token Unification
-            const loc = locMatch[1].charAt(0).toUpperCase() + locMatch[1].slice(1).toLowerCase();
+            const loc = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
             locations.push(loc);
         }
 
@@ -39,6 +41,9 @@ parentPort.on('message', async (task) => {
             fingerprint: task.fingerprint,
             result: {
                 fileName: task.filePath.split(/[/\\]/).pop(),
+                relativePath: task.rootDirectory ? path.relative(task.rootDirectory, task.filePath) : task.filePath,
+                extension: path.extname(task.filePath).toLowerCase(),
+                size: stats.size,
                 modifiedAt: stats.mtime.toISOString(),
                 content,
                 words,

@@ -65,7 +65,7 @@ test('generateAnalyticsReport flags files with missing metadata for prescriptive
     }
 });
 
-test('generateAnalyticsReport builds all analytics tiers from text files', async () => {
+test('generateAnalyticsReport builds all analytics tiers from text files (descriptive dates path)', async () => {
     const fixtureRoot = await createFixtureDirectory();
 
     try {
@@ -74,9 +74,7 @@ test('generateAnalyticsReport builds all analytics tiers from text files', async
         assert.equal(report.descriptive.fileCount, 2);
         assert.deepEqual(report.descriptive.locations, ['Phoenix', 'Roswell']);
         
-        // Use an OR condition to support both object paths during transition
-        const dates = report.descriptive.dates || report.dates;
-        assert.deepEqual(dates, ['2024-01-01', '2024-02-14']);
+        assert.deepEqual(report.descriptive.dates, ['2024-01-01', '2024-02-14']);
         
         assert.ok(report.descriptive.wordFrequency.location >= 2);
         assert.ok(report.diagnostic.wordUsageByLocation.Roswell.length > 0);

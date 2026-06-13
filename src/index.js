@@ -33,7 +33,15 @@ async function main() {
     const clearCache = args.includes('--clear-cache');
     
     const workersFlag = args.find(arg => arg.startsWith('--workers='));
-    const workers = workersFlag ? parseInt(workersFlag.split('=')[1], 10) : undefined;
+    let workers;
+    if (workersFlag) {
+        const parsed = parseInt(workersFlag.split('=')[1], 10);
+        if (Number.isNaN(parsed) || parsed < 1) {
+            process.stderr.write(`⚠️ Invalid --workers value. Must be a positive integer. Defaulting to CPU count.\n`);
+        } else {
+            workers = parsed;
+        }
+    }
     
     const sourceArg = args.find(arg => !arg.startsWith('--'));
     const sourceDirectory = sourceArg ? path.resolve(sourceArg) : process.cwd();
