@@ -127,6 +127,40 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 
 ## Usage
 
+
+To run the AnalyticsBot, simply pass the target directory containing your text files as the first argument:
+
+```bash
+node src/index.js ./my_folder/
+
+```
+
+By default, this will parse the documents and output a formatted JSON report directly to your console.
+
+### 👀 Watch Mode
+
+Keep the pipeline running in the background. It will automatically re-analyze the documents and recalculate the math whenever you add, edit, or delete a file in the target directory:
+
+```bash
+node src/index.js ./my_folder/ --watch
+
+```
+
+### 🖨️ Report Generation
+
+Instead of dumping JSON directly to the console, you can generate formatted report files that are automatically saved to the `/data_exports/` directory:
+
+```bash
+node src/index.js ./my_folder/ --format=md
+
+```
+
+*(Supports `md` for Markdown or `csv` for spreadsheet datasets).*
+
+
+---
+<br>
+
 ### 🚀 Advanced Usage
 
 The v1.2.0 AnalyticsBot engine supports multithreading and memoization caching. You can control these via CLI arguments:
@@ -134,6 +168,8 @@ The v1.2.0 AnalyticsBot engine supports multithreading and memoization caching. 
 * `node src/index.js ./my_folder --workers=4` : Manually set the number of WebAssembly worker threads (defaults to max CPU cores).
 * `node src/index.js ./my_folder --clear-cache` : Bypasses the `.analytics_cache.json` file and forces a fresh read of all documents.
 * `node src/index.js ./my_folder --format=csv` : Exports the final report as a spreadsheet-compatible `.csv` file.
+
+<br>
 
 
 
