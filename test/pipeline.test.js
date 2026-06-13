@@ -68,9 +68,9 @@ test('generateAnalyticsReport processes PDF files and extracts metadata', async 
     const fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'uap-analytics-'));
 
     try {
-        // Create a minimal valid PDF-like file structure for testing
-        // FIX: Lengthened payload text to bypass the < 50 char OCR trigger and prevent mupdf native aborts
-        const pdfContent = '%PDF-1.1\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>/Contents 4 0 R>>endobj 4 0 obj<</Length 110>>stream\nBT /F1 12 Tf 100 700 Td (Date: 2025-05-05 Location: Phoenix. This is a very long string to bypass OCR fallback limits safely.) Tj ET\nendstream\nendobj\ntrailer<</Root 1 0 R>>';
+        // Create a minimal text-only PDF structure for testing.
+        // Notice this lacks binary xref tables. Our new worker pre-flight check will safely bypass WASM OCR for this mock, preventing native crashes.
+        const pdfContent = '%PDF-1.1\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>/Contents 4 0 R>>endobj 4 0 obj<</Length 65>>stream\nBT /F1 12 Tf 100 700 Td (Date: 2025-05-05 Location: Phoenix) Tj ET\nendstream\nendobj\ntrailer<</Root 1 0 R>>';
         
         await fs.writeFile(path.join(fixtureRoot, 'test.pdf'), pdfContent);
 

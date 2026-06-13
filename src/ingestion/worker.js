@@ -56,7 +56,7 @@ async function readFileData(filePath, rootDirectory) {
         const lineReader = readline.createInterface({ input: stream, crlfDelay: Infinity });
         for await (const line of lineReader) await processTextData(line, words, dates, locations);
         stream.destroy();
-    } else if (extension === ".pdf") {
+} else if (extension === ".pdf") {
         const dataBuffer = await fsp.readFile(filePath);
         let extractedText = "";
 
@@ -67,25 +67,31 @@ async function readFileData(filePath, rootDirectory) {
             const pdfData = await parseFn(dataBuffer);
             extractedText = pdfData.text || "";
             metadata = pdfData.info || {};
-        } catch (err) { /* OCR Fallback */ }
+        } catch (err) { /* OCR Fallback will handle failure */ }
 
         if (extractedText.trim().length < 50) {
-            try {
-                // LAZY LOAD: Heavy WASM engines only spin up if strictly necessary
-                const mupdf = await import("mupdf");
-                const tesseract = require("tesseract.js");
-                
-                const doc = mupdf.Document.openDocument(dataBuffer, "application/pdf");
-                let ocrText = ""; 
-                for (let i = 0; i < doc.countPages(); i++) {
-                    const page = doc.loadPage(i);
-                    const pixmap = page.toPixmap(mupdf.Matrix.scale(2, 2), mupdf.ColorSpace.DeviceRGB, false);
-                    const { data: { text } } = await tesseract.recognize(Buffer.from(pixmap.asPNG()), "eng", { logger: () => {} });
-                    ocrText += text + " ";
+            // PRE-FLIGHT CHECK: WebAssembly mupdf will fatally abort the Node process if the PDF lacks basic structural markers.
+            // We scan the tail of the buffer for the mandatory EOF tag to prevent native crashes on corrupted files.
+            const tail = dataBuffer.toString("utf8", Math.max(0, dataBuffer.length - 1024));
+            
+            if (tail.includes("%%EOF") || tail.includes("startxref")) {
+                try {
+                    // LAZY LOAD: Heavy WASM engines only spin up if strictly necessary
+                    const mupdf = await import("mupdf");
+                    const tesseract = require("tesseract.js");
+                    
+                    const doc = mupdf.Document.openDocument(dataBuffer, "application/pdf");
+                    let ocrText = ""; 
+                    for (let i = 0; i < doc.countPages(); i++) {
+                        const page = doc.loadPage(i);
+                        const pixmap = page.toPixmap(mupdf.Matrix.scale(2, 2), mupdf.ColorSpace.DeviceRGB, false);
+                        const { data: { text } } = await tesseract.recognize(Buffer.from(pixmap.asPNG()), "eng", { logger: () => {} });
+                        ocrText += text + " ";
+                    }
+                    if (ocrText.trim().length > 0) extractedText = ocrText;
+                } catch (ocrError) {
+                    // Silently fall back to parsed text if WebAssembly fails mid-flight
                 }
-                if (ocrText.trim().length > 0) extractedText = ocrText;
-            } catch (ocrError) {
-                // Silently fall back to parsed text if WebAssembly aborts on corrupted scans
             }
         }
         await processTextData(extractedText, words, dates, locations);
