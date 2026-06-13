@@ -5,6 +5,11 @@ const readline = require("node:readline");
 const { promises: fsp } = require("node:fs");
 const nlp = require("compromise");
 
+// Guard the worker thread from unhandled microtask rejections within third-party libraries
+process.on("unhandledRejection", (reason) => {
+    parentPort.postMessage({ success: false, error: reason?.message || String(reason) });
+});
+
 const TEXT_EXTENSIONS = new Set([".txt", ".md", ".json", ".csv", ".log"]);
 const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg"]);
 const SUPPORTED_EXTENSIONS = new Set([...TEXT_EXTENSIONS, ...IMAGE_EXTENSIONS, ".pdf"]);
@@ -56,27 +61,23 @@ async function readFileData(filePath, rootDirectory) {
         const lineReader = readline.createInterface({ input: stream, crlfDelay: Infinity });
         for await (const line of lineReader) await processTextData(line, words, dates, locations);
         stream.destroy();
-} else if (extension === ".pdf") {
+    } else if (extension === ".pdf") {
         const dataBuffer = await fsp.readFile(filePath);
         let extractedText = "";
 
         try {
-            // LAZY LOAD: Prevents memory exhaustion for non-PDFs
             const pdfParse = require("pdf-parse"); 
             const parseFn = typeof pdfParse === "function" ? pdfParse : pdfParse.default;
             const pdfData = await parseFn(dataBuffer);
             extractedText = pdfData.text || "";
             metadata = pdfData.info || {};
-        } catch (err) { /* OCR Fallback will handle failure */ }
+        } catch (err) { /* OCR Fallback handles error states */ }
 
         if (extractedText.trim().length < 50) {
-            // PRE-FLIGHT CHECK: WebAssembly mupdf will fatally abort the Node process if the PDF lacks basic structural markers.
-            // We scan the tail of the buffer for the mandatory EOF tag to prevent native crashes on corrupted files.
             const tail = dataBuffer.toString("utf8", Math.max(0, dataBuffer.length - 1024));
             
             if (tail.includes("%%EOF") || tail.includes("startxref")) {
                 try {
-                    // LAZY LOAD: Heavy WASM engines only spin up if strictly necessary
                     const mupdf = await import("mupdf");
                     const tesseract = require("tesseract.js");
                     
@@ -89,14 +90,11 @@ async function readFileData(filePath, rootDirectory) {
                         ocrText += text + " ";
                     }
                     if (ocrText.trim().length > 0) extractedText = ocrText;
-                } catch (ocrError) {
-                    // Silently fall back to parsed text if WebAssembly fails mid-flight
-                }
+                } catch (ocrError) { /* Fallback gracefully to parsed content buffer */ }
             }
         }
         await processTextData(extractedText, words, dates, locations);
     } else if (IMAGE_EXTENSIONS.has(extension)) {
-        // LAZY LOAD
         const tesseract = require("tesseract.js");
         const { data: { text } } = await tesseract.recognize(filePath, "eng", { logger: () => {} });
         await processTextData(text, words, dates, locations);
@@ -116,7 +114,6 @@ async function readFileData(filePath, rootDirectory) {
     };
 }
 
-// Listen for tasks from the main thread
 parentPort.on("message", async ({ filePath, rootDirectory }) => {
     try {
         const result = await readFileData(filePath, rootDirectory);
