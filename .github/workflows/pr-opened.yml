@@ -1,0 +1,17 @@
+name: Pull Request Opened
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  pr-opened-actions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run PR Initialized Tasks
+        run: |
+          echo "A new pull request has been opened!"
+          # Add your automated scripts, linting tools, or CLI flags here
