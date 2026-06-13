@@ -5,7 +5,7 @@ const readline = require("node:readline");
 const { promises: fsp } = require("node:fs");
 const nlp = require("compromise");
 
-// Guard the worker thread from unhandled microtask rejections within third-party libraries
+// Protect the background V8 isolate from abrupt asynchronous library crashes
 process.on("unhandledRejection", (reason) => {
     parentPort.postMessage({ success: false, error: reason?.message || String(reason) });
 });
@@ -71,7 +71,7 @@ async function readFileData(filePath, rootDirectory) {
             const pdfData = await parseFn(dataBuffer);
             extractedText = pdfData.text || "";
             metadata = pdfData.info || {};
-        } catch (err) { /* OCR Fallback handles error states */ }
+        } catch (err) { /* OCR Fallback fallback loop logic flags */ }
 
         if (extractedText.trim().length < 50) {
             const tail = dataBuffer.toString("utf8", Math.max(0, dataBuffer.length - 1024));
@@ -90,7 +90,7 @@ async function readFileData(filePath, rootDirectory) {
                         ocrText += text + " ";
                     }
                     if (ocrText.trim().length > 0) extractedText = ocrText;
-                } catch (ocrError) { /* Fallback gracefully to parsed content buffer */ }
+                } catch (ocrError) { /* Fail safely over to parsed text metadata arrays */ }
             }
         }
         await processTextData(extractedText, words, dates, locations);
