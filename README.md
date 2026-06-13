@@ -19,6 +19,18 @@ The analysis stage is intentionally split into four tiers:
 3. **Predictive**: What is likely to happen? (trend forecasting from historical timestamps)
 4. **Prescriptive**: What should we do? (actionable recommendations and data-quality flags)
 
+## Core Features
+
+* **Multi-Format Ingestion:** Natively processes `.txt`, `.md`, `.json`, `.csv`, `.log`, and `.pdf` files.
+* **WebAssembly OCR Fallback:** Automatically detects scanned government PDFs and dynamically rasterizes pages into images via `mupdf` (running completely natively in the V8 engine) before passing them to Tesseract for optical character recognition.
+* **Intelligent Noise Filtering:** Utilizes a static $O(1)$ Stop-Word and artifact culling pass at the ingestion layer to strip grammatical glue and OCR noise, ensuring perfectly clean downstream analytics.
+* **Multi-Tiered Analytics:**
+  * **Descriptive:** Top keywords, location extraction, and timeline mapping.
+  * **Diagnostic:** Location-based keyword clustering.
+  * **Predictive:** Next-likely location hotspots based on frequency modeling.
+  * **Prescriptive:** Automated recommendations for folder restructuring and missing metadata alerts.
+* **Automated Markdown Reporting:** Formats raw JSON telemetry into a clean, human-readable intelligence report.
+
 ## Current Implementation
 
 The active implementation is a Node.js CLI that:
@@ -66,6 +78,7 @@ The current Node ingestion pipeline only analyzes text-oriented files.
 | `.json` | Ingested by the active Node pipeline |
 | `.csv` | Ingested by the active Node pipeline |
 | `.log` | Ingested by the active Node pipeline |
+| `.pdf` | Ingested by the active Node pipeline |
 <!-- GENERATED:supported-file-types:END -->
 
 ## Repository Layout

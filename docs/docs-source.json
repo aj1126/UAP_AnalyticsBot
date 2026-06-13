@@ -26,7 +26,8 @@
     ".md",
     ".json",
     ".csv",
-    ".log"
+    ".log",
+    ".pdf"
   ],
   "repoLayout": [
     {
