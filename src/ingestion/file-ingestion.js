@@ -45,21 +45,16 @@ function extractDates(text) {
 function extractLocations(text) {
     const doc = nlp(text);
 
-    // 1. Get explicitly known places in the base lexicon (like Phoenix)
     const knownPlaces = doc.match("#Place").out("array");
 
-    // 2. Syntactic Extraction: Get Proper Nouns following location keywords
-    // We match the keyword + noun, then strip the keyword away, leaving just the noun (Roswell)
     const contextualPlaces = doc
         .match("(in|at|near|location) #ProperNoun")
         .not("(in|at|near|location)")
         .out("array");
 
-    // 3. Combine and deduplicate the arrays
     return [...new Set([...knownPlaces, ...contextualPlaces])];
 }
 
-// Extracted text processing logic so it can be shared across file types
 async function processTextData(text, words, dates, locations) {
     if (!text) return;
     words.push(...normalizeWords(text));
@@ -82,10 +77,10 @@ async function readFileData(filePath, rootDirectory) {
     const words = [];
     const dates = new Set();
     const locations = new Set();
+    let metadata = {};
 
     try {
         if (TEXT_EXTENSIONS.has(extension)) {
-            // Keep the memory-efficient streaming for standard text logs
             const stream = fs.createReadStream(filePath, { encoding: "utf8" });
             const lineReader = readline.createInterface({
                 input: stream,
@@ -96,23 +91,39 @@ async function readFileData(filePath, rootDirectory) {
                 await processTextData(line, words, dates, locations);
             }
             stream.destroy();
-        } else if (extension === ".pdf") {
+} else if (extension === '.pdf') {
             const dataBuffer = await fsp.readFile(filePath);
-            const pdfData = await pdfParse(dataBuffer, {
+
+            // Access the function explicitly as pdfParse.pdf based on version 2.4.5
+            const parseFn = pdfParse.pdf;
+
+            if (typeof parseFn !== 'function') {
+                throw new Error("Could not find callable 'pdf' function in pdf-parse v2.4.5.");
+            }
+
+            const pdfData = await parseFn(dataBuffer, {
                 pagerender: (pageData) => {
                     return pageData.getTextContent().then((textContent) => {
-                        return textContent.items.map((s) => s.str).join(" ");
+                        return textContent.items.map((s) => s.str).join(' ');
                     });
                 },
             });
+
             await processTextData(pdfData.text, words, dates, locations);
-            // Append metadata to file record
+
             return {
-                ...stats,
-                metadata: pdfData.info, // Contains Title, Author, Creator, etc.
+                path: filePath,
+                relativePath: path.relative(rootDirectory, filePath),
+                extension,
+                size: stats.size,
+                createdAt: stats.birthtime.toISOString(),
+                modifiedAt: stats.mtime.toISOString(),
+                words,
+                dates: [...dates],
+                locations: [...locations],
+                metadata: pdfData.info,
             };
         } else if (IMAGE_EXTENSIONS.has(extension)) {
-            // Run OCR against image files
             const {
                 data: { text },
             } = await tesseract.recognize(filePath, "eng", {
@@ -134,6 +145,7 @@ async function readFileData(filePath, rootDirectory) {
         words,
         dates: [...dates],
         locations: [...locations],
+        metadata,
     };
 }
 
