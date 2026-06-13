@@ -123,3 +123,21 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 - Preserve strict read-only behavior for source directories.
 - When adding analytics, classify behavior under one of the four analytics tiers.
 - Update [docs/architecture.md](docs/architecture.md) when implementation changes affect current-vs-planned system boundaries.
+
+## 🚀 Planned Technical Optimizations
+
+### 1. Performance & Infrastructure
+*   **Multithreaded Ingestion**: Transition the CPU-bound WebAssembly and OCR tasks to a `Worker Pool` using `node:worker_threads` to achieve near-linear scaling on multi-core Windows 11 systems.
+*   **Ingestion Caching**: Implement a fingerprinting system using file metadata (size + mtime) to cache extraction results in a `.analytics_cache.json` file, bypassing heavy processing for unchanged documents.
+
+### 2. Algorithmic Depth (Diagnostic Tier)
+*   **TF-IDF Weighting**: Implement Term Frequency-Inverse Document Frequency to mathematically penalize common stop-words and highlight unique, document-defining keywords[cite: 2].
+*   **Semantic Similarity**: Utilize Cosine Similarity matrices to discover conceptual overlaps between separate PDF reports in the repository.
+
+### 3. Data Integrity & NLP
+*   **Entity Unification**: Enhance the normalization pass to merge variations of locations (e.g., "Mexico:", "Mexico's", and "MEXICO") into a single canonical token.
+*   **Advanced Stop-Word Culling**: Expand the static $O(1)$ filter set to include common OCR artifacts and administrative government jargon.
+
+### 4. Predictive & Prescriptive Enhancements
+*   **Time-Series Clustering**: Group location hotspots by temporal quarters to improve the accuracy of the `likelyNextHotspot` forecast.
+*   **Metadata Validation**: Extend data-quality flags to check for specific required fields in PDF `metadata.info` objects.
