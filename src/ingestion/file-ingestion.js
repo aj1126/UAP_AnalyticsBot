@@ -88,9 +88,15 @@ async function readFileData(filePath, rootDirectory) {
             stream.destroy();
 
         } else if (extension === '.pdf') {
-            // Read PDF buffer directly into memory and parse
             const dataBuffer = await fsp.readFile(filePath);
-            const pdfData = await pdfParse(dataBuffer);
+            // Use the "pagerender" option to keep text structured by page
+            const pdfData = await pdfParse(dataBuffer, {
+                pagerender: (pageData) => {
+                    return pageData.getTextContent().then((textContent) => {
+                        return textContent.items.map(s => s.str).join(' ');
+                    });
+                }
+            });
             await processTextData(pdfData.text, words, dates, locations);
 
         } else if (IMAGE_EXTENSIONS.has(extension)) {

@@ -28,3 +28,9 @@ This document tracks the active expansion phases for the AnalyticsBot pipeline.
 - [x] Install filesystem watcher (`npm install chokidar`).
 - [x] Implement a `--watch` flag in the CLI orchestrator.
 - [x] Hook `chokidar` file events (add, change, unlink) into the `pipeline.js` to update the corpus index without full application restarts.
+
+## Stage 5: Advanced PDF & Structural Analysis
+**Goal:** Improve PDF ingestion by preserving page-level context and metadata.
+- [ ] Refactor `readFileData` to support page-based text content extraction.
+- [ ] Implement PDF metadata extraction (Author, CreationDate) to augment `Metadata Extractor`.
+- [ ] Update `test/pipeline.test.js` with a mock PDF fixture to validate multi-page parsing.
