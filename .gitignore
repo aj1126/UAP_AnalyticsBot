@@ -32,6 +32,7 @@ Thumbs.db
 .env.local
 copilot-chat-history.json
 *.traineddata
+.analytics_cache.json
 
 # =========================
 # Bot Specific: Data & Media
