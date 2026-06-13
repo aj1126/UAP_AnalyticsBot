@@ -25,6 +25,6 @@ This document tracks the active expansion phases for the AnalyticsBot pipeline.
 
 ## Stage 4: Continuous Event Loop
 **Goal:** Allow the bot to monitor a directory and update analytics dynamically.
-- [ ] Install filesystem watcher (`npm install chokidar`).
-- [ ] Implement a `--watch` flag in the CLI orchestrator.
-- [ ] Hook `chokidar` file events (add, change, unlink) into the `pipeline.js` to update the corpus index without full application restarts.
+- [x] Install filesystem watcher (`npm install chokidar`).
+- [x] Implement a `--watch` flag in the CLI orchestrator.
+- [x] Hook `chokidar` file events (add, change, unlink) into the `pipeline.js` to update the corpus index without full application restarts.
