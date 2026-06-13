@@ -1,0 +1,31 @@
+name: Issue Triage Automation
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  assign-milestone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Automatically Assign to Active Milestone
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // Fetches open milestones and assigns the newest issue to the first open milestone
+            const milestones = await github.rest.issues.listMilestones({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              sort: 'due_on',
+              direction: 'asc'
+            });
+            
+            if (milestones.data.length > 0) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                milestone: milestones.data[0].number
+              });
+            }

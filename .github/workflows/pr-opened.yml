@@ -1,17 +1,18 @@
-name: Pull Request Opened
+name: Auto-Add PR to Project
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, reopened]
 
 jobs:
-  pr-opened-actions:
+  add-to-project:
+    name: Add PR to Project
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run PR Initialized Tasks
-        run: |
-          echo "A new pull request has been opened!"
-          # Add your automated scripts, linting tools, or CLI flags here
+      - name: Send to Project Board
+        uses: actions/add-to-project@v1.0.2
+        with:
+          # REPLACE this with your actual GitHub Project URL
+          project-url: https://github.com/users/aj1126/projects/1
+          # This requires a custom secret, not the default GITHUB_TOKEN
+          github-token: ${{ secrets.PROJECT_PAT }}
