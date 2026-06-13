@@ -21,18 +21,23 @@ async function ingestDirectory(rootDirectory) {
     const files = [];
     const pathsToProcess = [];
 
-    // 1. Instantly gather all file paths without blocking
     for await (const filePath of walkFiles(sourceDirectory)) {
         pathsToProcess.push(filePath);
     }
 
-    // 2. Provision the Worker Pool (Leave 1 core free for OS stability)
-    const numWorkers = Math.max(1, os.cpus().length - 1);
+    // FIX 1: Cap workers to the number of files. 
+    // Prevents spawning 15 massive threads to process 1 tiny test file.
+    const maxCores = Math.max(1, os.cpus().length - 1);
+    const numWorkers = Math.min(pathsToProcess.length, maxCores);
+    
+    if (numWorkers === 0) {
+        return { sourceDirectory, files };
+    }
+
     process.stdout.write(`\n🚀 Initializing WebAssembly Worker Pool (${numWorkers} threads)...\n`);
 
     let currentIndex = 0;
 
-    // 3. Dispatch tasks concurrently
     await Promise.all(
         Array.from({ length: numWorkers }).map(() => {
             return new Promise((resolve) => {
@@ -49,14 +54,14 @@ async function ingestDirectory(rootDirectory) {
 
                 worker.on("error", (err) => {
                     process.stderr.write(`\n⚠️ Fatal Worker Crash: ${err.message}\n`);
-                    assignNextTask();
+                    // FIX 2: Await thread termination so it doesn't leave dangling memory leaks
+                    worker.terminate().then(resolve);
                 });
 
                 function assignNextTask() {
-                    // Terminate the thread cleanly when the queue is empty
                     if (currentIndex >= pathsToProcess.length) {
-                        worker.terminate();
-                        resolve();
+                        // FIX 2: Await thread termination to clear the Node.js event loop
+                        worker.terminate().then(resolve);
                         return;
                     }
                     
@@ -64,7 +69,6 @@ async function ingestDirectory(rootDirectory) {
                     worker.postMessage({ filePath, rootDirectory: sourceDirectory });
                 }
 
-                // Boot the first task
                 assignNextTask();
             });
         })
