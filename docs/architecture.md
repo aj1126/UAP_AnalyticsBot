@@ -9,6 +9,10 @@ The repository currently ships a Node.js CLI-centered analytics flow:
 3. **Analytics Pipeline (`src/pipeline.js`)** builds the descriptive, diagnostic, predictive, and prescriptive tiers from the ingested file set.
 4. **Output Layer** returns a single structured JSON report for the requested directory.
 
+### v1.2.0 Pipeline Architecture
+* **Ingestion (Multithreaded):** Utilizes Node.js `worker_threads` and file-stat fingerprinting (`.analytics_cache.json`) to bypass redundant processing and drastically speed up execution.
+* **Semantic Analytics:** Employs a TF-IDF weighting engine to filter generic stop-words and a Cosine Similarity math engine to automatically cluster related UAP documents based on vector distance.
+
 ## Current Runtime Boundaries
 
 Implemented today:

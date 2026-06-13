@@ -125,6 +125,18 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 - When adding analytics, classify behavior under one of the four analytics tiers.
 - Update [docs/architecture.md](docs/architecture.md) when implementation changes affect current-vs-planned system boundaries.
 
+## Usage
+
+### 🚀 Advanced Usage
+
+The v1.2.0 AnalyticsBot engine supports multithreading and memoization caching. You can control these via CLI arguments:
+
+* `node src/index.js ./my_folder --workers=4` : Manually set the number of WebAssembly worker threads (defaults to max CPU cores).
+* `node src/index.js ./my_folder --clear-cache` : Bypasses the `.analytics_cache.json` file and forces a fresh read of all documents.
+* `node src/index.js ./my_folder --format=csv` : Exports the final report as a spreadsheet-compatible `.csv` file.
+
+
+
 ## 🚀 Planned Technical Optimizations
 
 ### 1. Performance & Infrastructure
