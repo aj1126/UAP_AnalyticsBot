@@ -3,14 +3,19 @@ const path = require('node:path');
 const chokidar = require('chokidar');
 const { generateAnalyticsReport } = require('./pipeline');
 const { generateMarkdownReport } = require('./delivery/markdown-generator');
+const { generateCsvReport } = require('./delivery/csv-generator');
 
-async function runPipeline(sourceDirectory, format) {
+async function runPipeline(sourceDirectory, format, options) {
     try {
-        const report = await generateAnalyticsReport(sourceDirectory);
+        const report = await generateAnalyticsReport(sourceDirectory, options);
+        const exportsDir = path.join(process.cwd(), 'data_exports');
+        
         if (format === 'md' || format === 'markdown') {
-            const exportsDir = path.join(process.cwd(), 'data_exports');
             const savedPath = await generateMarkdownReport(report, exportsDir);
             process.stdout.write(`✅ Markdown report successfully generated at:\n${savedPath}\n`);
+        } else if (format === 'csv') {
+            const savedPath = await generateCsvReport(report, exportsDir);
+            process.stdout.write(`✅ CSV report successfully generated at:\n${savedPath}\n`);
         } else {
             process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
         }
@@ -22,42 +27,37 @@ async function runPipeline(sourceDirectory, format) {
 async function main() {
     const args = process.argv.slice(2);
     
-    // Parse flags
     const formatFlag = args.find(arg => arg.startsWith('--format='));
     const format = formatFlag ? formatFlag.split('=')[1].toLowerCase() : 'json';
     const isWatchMode = args.includes('--watch');
+    const clearCache = args.includes('--clear-cache');
     
-    // Parse target directory
+    const workersFlag = args.find(arg => arg.startsWith('--workers='));
+    const workers = workersFlag ? parseInt(workersFlag.split('=')[1], 10) : undefined;
+    
     const sourceArg = args.find(arg => !arg.startsWith('--'));
     const sourceDirectory = sourceArg ? path.resolve(sourceArg) : process.cwd();
 
+    const options = { clearCache, workers };
+
     if (isWatchMode) {
         process.stdout.write(`👀 Watching directory for changes: ${sourceDirectory}\n`);
-        
-        // Initialize OS Event Listener
         const watcher = chokidar.watch(sourceDirectory, {
             ignored: [/(^|[\/\\])\../, /node_modules/, /data_exports/],
-            persistent: true,
-            ignoreInitial: false
+            persistent: true, ignoreInitial: false
         });
 
-        // Debounce logic to prevent CPU spikes on bulk file operations
         let timeout;
         const triggerPipeline = () => {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 process.stdout.write(`\n🔄 File system event detected. Recalculating analytics...\n`);
-                runPipeline(sourceDirectory, format);
-            }, 500); // 500ms buffer
+                runPipeline(sourceDirectory, format, options);
+            }, 500);
         };
-
-        // Bind events
-        watcher
-            .on('add', triggerPipeline)
-            .on('change', triggerPipeline)
-            .on('unlink', triggerPipeline);
+        watcher.on('add', triggerPipeline).on('change', triggerPipeline).on('unlink', triggerPipeline);
     } else {
-        await runPipeline(sourceDirectory, format);
+        await runPipeline(sourceDirectory, format, options);
     }
 }
 

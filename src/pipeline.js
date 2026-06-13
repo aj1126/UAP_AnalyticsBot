@@ -4,8 +4,8 @@ const { buildDiagnosticAnalytics } = require('./analytics/diagnostic');
 const { buildPredictiveAnalytics } = require('./analytics/predictive');
 const { buildPrescriptiveAnalytics } = require('./analytics/prescriptive');
 
-async function generateAnalyticsReport(sourceDirectory) {
-    const ingestionResult = await ingestDirectory(sourceDirectory);
+async function generateAnalyticsReport(sourceDirectory, options = {}) {
+    const ingestionResult = await ingestDirectory(sourceDirectory, options);
     const descriptive = buildDescriptiveAnalytics(ingestionResult.files);
 
     return {
@@ -17,6 +17,4 @@ async function generateAnalyticsReport(sourceDirectory) {
     };
 }
 
-module.exports = {
-    generateAnalyticsReport
-};
+module.exports = { generateAnalyticsReport };
