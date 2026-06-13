@@ -25,12 +25,13 @@ function buildDescriptiveAnalytics(files) {
         locations: [...new Set(allLocations)].sort(),
         files: files.map((file) => ({
             path: file.relativePath,
+            extension: file.extension, // <-- FIX: Added extension propagation
             size: file.size,
             modifiedAt: file.modifiedAt,
             wordCount: file.words.length,
             dates: file.dates,
             locations: file.locations,
-            metadata: file.metadata || {} // <-- FIX: Propagate metadata to the final report
+            metadata: file.metadata || {} 
         }))
     };
 }

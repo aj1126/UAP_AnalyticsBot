@@ -82,7 +82,7 @@ test('generateAnalyticsReport processes PDF files and extracts metadata', async 
         assert.deepEqual(report.descriptive.dates, ['2025-05-05']);
         
         // Verify metadata object exists
-        const pdfRecord = report.files.find(f => f.extension === '.pdf');
+        const pdfRecord = report.descriptive.files.find(f => f.extension === '.pdf'); // <-- FIX: Corrected target object
         assert.ok(pdfRecord.metadata !== undefined, 'PDF metadata should be present');
     } finally {
         await fs.rm(fixtureRoot, { recursive: true, force: true });
