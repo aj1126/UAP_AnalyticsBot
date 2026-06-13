@@ -1,22 +1,32 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 
+function escapeCsvCell(value) {
+    const normalized = value == null ? '' : String(value);
+    const formulaSafe = /^[=+\-@]/.test(normalized) ? `'${normalized}` : normalized;
+    return `"${formulaSafe.replace(/"/g, '""')}"`;
+}
+
+function buildCsvRow(cells) {
+    return `${cells.map(escapeCsvCell).join(',')}\n`;
+}
+
 async function generateCsvReport(report, exportsDir) {
     await fs.mkdir(exportsDir, { recursive: true });
     const csvPath = path.join(exportsDir, `report-${Date.now()}.csv`);
     
-    let csvContent = "Category,Metric,Value\n";
-    csvContent += `Descriptive,FileCount,${report.descriptive.fileCount}\n`;
+    let csvContent = buildCsvRow(['Category', 'Metric', 'Value']);
+    csvContent += buildCsvRow(['Descriptive', 'FileCount', report.descriptive.fileCount]);
     
     const locations = report.descriptive.locations || report.locations || [];
-    csvContent += `Descriptive,UniqueLocations,"${locations.join(', ')}"\n`;
+    csvContent += buildCsvRow(['Descriptive', 'UniqueLocations', locations.join(', ')]);
     
     if (report.predictive?.locationClusterForecast) {
-         csvContent += `Predictive,LikelyNextHotspot,${report.predictive.locationClusterForecast.likelyNextHotspot}\n`;
+         csvContent += buildCsvRow(['Predictive', 'LikelyNextHotspot', report.predictive.locationClusterForecast.likelyNextHotspot]);
     }
     if (report.predictive?.keywordFrequencyForecast) {
-         csvContent += `Predictive,ForecastMonth,${report.predictive.keywordFrequencyForecast.forecastMonth}\n`;
-         csvContent += `Predictive,ForecastWordCount,${report.predictive.keywordFrequencyForecast.forecastWordCount}\n`;
+         csvContent += buildCsvRow(['Predictive', 'ForecastMonth', report.predictive.keywordFrequencyForecast.forecastMonth]);
+         csvContent += buildCsvRow(['Predictive', 'ForecastWordCount', report.predictive.keywordFrequencyForecast.forecastWordCount]);
     }
 
     await fs.writeFile(csvPath, csvContent, 'utf-8');

@@ -56,11 +56,12 @@ async function main() {
         });
 
         let timeout;
+        let pipelineQueue = Promise.resolve();
         const triggerPipeline = () => {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 process.stdout.write(`\n🔄 File system event detected. Recalculating analytics...\n`);
-                runPipeline(sourceDirectory, format, options);
+                pipelineQueue = pipelineQueue.then(() => runPipeline(sourceDirectory, format, options));
             }, 500);
         };
         watcher.on('add', triggerPipeline).on('change', triggerPipeline).on('unlink', triggerPipeline);

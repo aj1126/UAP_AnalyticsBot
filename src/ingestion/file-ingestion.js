@@ -3,6 +3,13 @@ const os = require("node:os");
 const { promises: fsp } = require("node:fs");
 const { Worker } = require("node:worker_threads");
 
+const CACHE_VERSION = 1;
+const SUPPORTED_TEXT_EXTENSIONS = new Set([".txt", ".md", ".json", ".csv", ".log"]);
+
+function isSupportedTextFile(filePath) {
+    return SUPPORTED_TEXT_EXTENSIONS.has(path.extname(filePath).toLowerCase());
+}
+
 async function* walkFiles(rootDirectory) {
     const directoryEntries = await fsp.readdir(rootDirectory, { withFileTypes: true });
 
@@ -29,7 +36,10 @@ async function ingestDirectory(rootDirectory, options = {}) {
     if (!options.clearCache) {
         try {
             const cacheData = await fsp.readFile(cachePath, 'utf-8');
-            cache = JSON.parse(cacheData);
+            const parsedCache = JSON.parse(cacheData);
+            if (parsedCache && parsedCache.version === CACHE_VERSION && parsedCache.entries && typeof parsedCache.entries === 'object') {
+                cache = parsedCache.entries;
+            }
         } catch (err) {
             cache = {};
         }
@@ -37,6 +47,10 @@ async function ingestDirectory(rootDirectory, options = {}) {
 
     const visitedPaths = new Set();
     for await (const filePath of walkFiles(sourceDirectory)) {
+        if (!isSupportedTextFile(filePath)) {
+            continue;
+        }
+
         visitedPaths.add(filePath);
         const stats = await fsp.stat(filePath);
         const fingerprint = `${stats.size}-${stats.mtimeMs}`; // Size + Modified Time
@@ -101,7 +115,10 @@ async function ingestDirectory(rootDirectory, options = {}) {
     );
 
     // Save newly parsed data back to .analytics_cache.json
-    await fsp.writeFile(cachePath, JSON.stringify(cache, null, 2));
+    const cachePayload = JSON.stringify({ version: CACHE_VERSION, entries: cache }, null, 2);
+    const tempCachePath = `${cachePath}.${process.pid}.${Date.now()}.tmp`;
+    await fsp.writeFile(tempCachePath, cachePayload, 'utf-8');
+    await fsp.rename(tempCachePath, cachePath);
 
     return { sourceDirectory, files };
 }

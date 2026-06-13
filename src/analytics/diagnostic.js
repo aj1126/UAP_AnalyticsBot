@@ -77,23 +77,30 @@ function calculateTFIDF(files) {
     });
 
     // ✨ Pass 2: Semantic Cross-Linking Loop
-    return vectorizedFiles.map(fileA => {
-        const related = [];
-        vectorizedFiles.forEach(fileB => {
-            if (fileA.fileName !== fileB.fileName) {
-                const score = calculateCosineSimilarity(fileA.vector, fileB.vector);
-                if (score > 0.05) { // Threshold for correlation relevancy
-                    related.push({ match: fileB.fileName, correlationScore: Number(score.toFixed(4)) });
-                }
+    const relatedByIndex = Array.from({ length: vectorizedFiles.length }, () => []);
+    for (let indexA = 0; indexA < vectorizedFiles.length; indexA += 1) {
+        for (let indexB = indexA + 1; indexB < vectorizedFiles.length; indexB += 1) {
+            const fileA = vectorizedFiles[indexA];
+            const fileB = vectorizedFiles[indexB];
+            const score = calculateCosineSimilarity(fileA.vector, fileB.vector);
+
+            if (score > 0.05) {
+                const correlationScore = Number(score.toFixed(4));
+                relatedByIndex[indexA].push({ match: fileB.fileName, correlationScore });
+                relatedByIndex[indexB].push({ match: fileA.fileName, correlationScore });
             }
-        });
-        
-        related.sort((a, b) => b.correlationScore - a.correlationScore);
-        
-        return { 
-            fileName: fileA.fileName, 
-            topKeywords: fileA.topKeywords,
-            relatedDocuments: related.slice(0, 3) // Return Top 3 Matches
+        }
+    }
+
+    return vectorizedFiles.map((file, index) => {
+        const related = relatedByIndex[index]
+            .sort((left, right) => right.correlationScore - left.correlationScore)
+            .slice(0, 3);
+
+        return {
+            fileName: file.fileName,
+            topKeywords: file.topKeywords,
+            relatedDocuments: related // Return Top 3 Matches
         };
     });
 }

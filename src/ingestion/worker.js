@@ -2,6 +2,8 @@ const path = require('node:path');
 const { parentPort } = require('node:worker_threads');
 const fs = require('node:fs/promises');
 
+const SUPPORTED_TEXT_EXTENSIONS = new Set(['.txt', '.md', '.json', '.csv', '.log']);
+
 // ✨ Advanced Stop-Word Culling Dictionary
 const STOP_WORDS = new Set([
     'a', 'about', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
@@ -11,6 +13,16 @@ const STOP_WORDS = new Set([
 
 parentPort.on('message', async (task) => {
     try {
+        const extension = path.extname(task.filePath).toLowerCase();
+        if (!SUPPORTED_TEXT_EXTENSIONS.has(extension)) {
+            parentPort.postMessage({
+                success: true,
+                filePath: task.filePath,
+                fingerprint: task.fingerprint
+            });
+            return;
+        }
+
         const content = await fs.readFile(task.filePath, 'utf-8');
         const stats = await fs.stat(task.filePath);
         
@@ -42,10 +54,9 @@ parentPort.on('message', async (task) => {
             result: {
                 fileName: task.filePath.split(/[/\\]/).pop(),
                 relativePath: task.rootDirectory ? path.relative(task.rootDirectory, task.filePath) : task.filePath,
-                extension: path.extname(task.filePath).toLowerCase(),
+                extension,
                 size: stats.size,
                 modifiedAt: stats.mtime.toISOString(),
-                content,
                 words,
                 dates,
                 locations
