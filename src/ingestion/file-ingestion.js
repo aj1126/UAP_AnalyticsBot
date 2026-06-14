@@ -3,6 +3,25 @@ const os = require("node:os");
 const { promises: fsp } = require("node:fs");
 const { Worker } = require("node:worker_threads");
 
+const CACHE_SCHEMA_VERSION = 1;
+
+function parseCacheEntries(cacheData) {
+    const parsedCache = JSON.parse(cacheData);
+
+    if (
+        parsedCache &&
+        typeof parsedCache === 'object' &&
+        parsedCache.version === CACHE_SCHEMA_VERSION &&
+        parsedCache.entries &&
+        typeof parsedCache.entries === 'object' &&
+        !Array.isArray(parsedCache.entries)
+    ) {
+        return parsedCache.entries;
+    }
+
+    return {};
+}
+
 async function* walkFiles(rootDirectory) {
     const directoryEntries = await fsp.readdir(rootDirectory, { withFileTypes: true });
 
@@ -29,7 +48,7 @@ async function ingestDirectory(rootDirectory, options = {}) {
     if (!options.clearCache) {
         try {
             const cacheData = await fsp.readFile(cachePath, 'utf-8');
-            cache = JSON.parse(cacheData);
+            cache = parseCacheEntries(cacheData);
         } catch (err) {
             cache = {};
         }
@@ -101,7 +120,12 @@ async function ingestDirectory(rootDirectory, options = {}) {
     );
 
     // Save newly parsed data back to .analytics_cache.json
-    await fsp.writeFile(cachePath, JSON.stringify(cache, null, 2));
+    const tempCachePath = `${cachePath}.${process.pid}.${Date.now()}.tmp`;
+    await fsp.writeFile(
+        tempCachePath,
+        JSON.stringify({ version: CACHE_SCHEMA_VERSION, entries: cache }, null, 2)
+    );
+    await fsp.rename(tempCachePath, cachePath);
 
     return { sourceDirectory, files };
 }

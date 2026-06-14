@@ -143,7 +143,7 @@ cd uap_analyticsbot
 
 
 2. **Install dependencies:**
-Because this engine utilizes pre-compiled WebAssembly, there are no complex C++ build tools or `node-gyp` configurations required on Windows. Simply run:
+This project installs as a standard Node.js CLI package, so there are no extra native build steps required for the current worker-thread ingestion flow. Simply run:
 ```bash
 npm install
 
@@ -208,7 +208,7 @@ node src/index.js ./my_folder/ --format=md
 
 The v1.2.0 AnalyticsBot engine supports multithreading and memoization caching. You can control these via CLI arguments:
 
-* `node src/index.js ./my_folder --workers=4` : Manually set the number of WebAssembly worker threads (defaults to max CPU cores).
+* `node src/index.js ./my_folder --workers=4` : Manually set the number of Node.js worker threads (defaults to max CPU cores).
 * `node src/index.js ./my_folder --clear-cache` : Bypasses the `.analytics_cache.json` file and forces a fresh read of all documents.
 * `node src/index.js ./my_folder --format=csv` : Exports the final report as a spreadsheet-compatible `.csv` file.
 

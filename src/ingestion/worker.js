@@ -1,6 +1,8 @@
 const path = require('node:path');
 const { parentPort } = require('node:worker_threads');
-const fs = require('node:fs/promises');
+const fs = require('node:fs');
+const fsp = require('node:fs/promises');
+const readline = require('node:readline');
 
 const SUPPORTED_TEXT_EXTENSIONS = new Set(['.txt', '.md', '.json', '.csv', '.log']);
 
@@ -23,32 +25,37 @@ parentPort.on('message', async (task) => {
             return;
         }
 
-        const content = await fs.readFile(task.filePath, 'utf-8');
-        const stats = await fs.stat(task.filePath);
+        const stats = await fsp.stat(task.filePath);
         
         const dates = [];
         const locations = [];
-
-        // Filter out punctuation, make lowercase, and cull stop words
-        const rawWords = content
-            .replace(/[^\w\s]/g, '')
-            .toLowerCase()
-            .split(/\s+/)
-            .filter(word => word.length > 1 && !STOP_WORDS.has(word));
-
-        // 🚀 OPTIMIZATION: Calculate map inside worker to drastically reduce IPC channel memory usage
         const wordFrequency = {};
-        for(const word of rawWords) {
-            wordFrequency[word] = (wordFrequency[word] || 0) + 1;
-        }
+        let totalWords = 0;
+        const fileStream = fs.createReadStream(task.filePath, { encoding: 'utf-8' });
+        const lines = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
 
-        for (const match of content.matchAll(/Date:\s*(\d{4}-\d{2}-\d{2})/gi)) {
-            dates.push(match[1]);
-        }
+        for await (const line of lines) {
+            // Filter out punctuation, make lowercase, and cull stop words
+            const rawWords = line
+                .replace(/[^\w\s]/g, '')
+                .toLowerCase()
+                .split(/\s+/)
+                .filter(word => word.length > 1 && !STOP_WORDS.has(word));
 
-        for (const match of content.matchAll(/Location:\s*([A-Za-z]+)/gi)) {
-            const loc = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
-            locations.push(loc);
+            // 🚀 OPTIMIZATION: Calculate map inside worker to drastically reduce IPC channel memory usage
+            for (const word of rawWords) {
+                wordFrequency[word] = (wordFrequency[word] || 0) + 1;
+            }
+            totalWords += rawWords.length;
+
+            for (const match of line.matchAll(/Date:\s*(\d{4}-\d{2}-\d{2})/gi)) {
+                dates.push(match[1]);
+            }
+
+            for (const match of line.matchAll(/Location:\s*([A-Za-z]+)/gi)) {
+                const loc = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
+                locations.push(loc);
+            }
         }
 
         parentPort.postMessage({
@@ -62,7 +69,7 @@ parentPort.on('message', async (task) => {
                 size: stats.size,
                 modifiedAt: stats.mtime.toISOString(),
                 wordFrequency, 
-                totalWords: rawWords.length,
+                totalWords,
                 uniqueWords: Object.keys(wordFrequency),
                 dates,
                 locations

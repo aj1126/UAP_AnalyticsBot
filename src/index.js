@@ -48,7 +48,7 @@ async function main() {
 
     const options = { clearCache, workers };
 
-if (isWatchMode) {
+    if (isWatchMode) {
         process.stdout.write(`👀 Watching directory for changes: ${sourceDirectory}\n`);
         const watcher = chokidar.watch(sourceDirectory, {
             // 🧹 Minor polish: Restrict ignored regex to strict ends-with path
@@ -62,7 +62,9 @@ if (isWatchMode) {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 process.stdout.write(`\n🔄 File system event detected. Recalculating analytics...\n`);
-                runPipeline(sourceDirectory, format, options);
+                pipelineQueue = pipelineQueue
+                    .then(() => runPipeline(sourceDirectory, format, options))
+                    .catch(() => {});
             }, 500);
         };
         watcher.on('add', triggerPipeline).on('change', triggerPipeline).on('unlink', triggerPipeline);

@@ -82,6 +82,8 @@ function calculateTFIDF(files) {
     const MAX_CROSS_REF = 500;
     const targetFiles = vectorizedFiles.slice(0, MAX_CROSS_REF);
     const relatedByIndex = Array.from({ length: vectorizedFiles.length }, () => []);
+
+    const getFileLabel = (file) => file.fileName || file.relativePath || 'unknown';
     
     for (let indexA = 0; indexA < targetFiles.length; indexA += 1) {
         for (let indexB = indexA + 1; indexB < targetFiles.length; indexB += 1) {
@@ -91,8 +93,8 @@ function calculateTFIDF(files) {
 
             if (score > 0.05) {
                 const correlationScore = Number(score.toFixed(4));
-                relatedByIndex[indexA].push({ match: fileB.fileName, correlationScore });
-                relatedByIndex[indexB].push({ match: fileA.fileName, correlationScore });
+                relatedByIndex[indexA].push({ match: getFileLabel(fileB), correlationScore });
+                relatedByIndex[indexB].push({ match: getFileLabel(fileA), correlationScore });
             }
         }
     }
@@ -103,7 +105,7 @@ function calculateTFIDF(files) {
             : [];
 
         return {
-            fileName: file.fileName,
+            fileName: getFileLabel(file),
             topKeywords: file.topKeywords,
             relatedDocuments: related
         };
