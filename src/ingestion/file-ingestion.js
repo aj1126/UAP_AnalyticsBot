@@ -80,47 +80,45 @@ async function ingestDirectory(rootDirectory, options = {}) {
     const maxCores = options.workers || Math.max(1, os.cpus().length - 1);
     const numWorkers = Math.min(pathsToProcess.length, maxCores);
     
-    if (numWorkers === 0) {
-        return { sourceDirectory, files };
-    }
+    if (numWorkers > 0) {
+        process.stdout.write(`\n🚀 Initializing WebAssembly Worker Pool (${numWorkers} threads)...\n`);
 
-    process.stdout.write(`\n🚀 Initializing WebAssembly Worker Pool (${numWorkers} threads)...\n`);
+        let currentIndex = 0;
 
-    let currentIndex = 0;
+        await Promise.all(
+            Array.from({ length: numWorkers }).map(() => {
+                return new Promise((resolve) => {
+                    const worker = new Worker(path.join(__dirname, "worker.js"));
 
-    await Promise.all(
-        Array.from({ length: numWorkers }).map(() => {
-            return new Promise((resolve) => {
-                const worker = new Worker(path.join(__dirname, "worker.js"));
+                    worker.on("message", (msg) => {
+                        if (msg.success && msg.result) {
+                            files.push(msg.result);
+                            cache[msg.filePath] = { fingerprint: msg.fingerprint, data: msg.result };
+                        } else if (!msg.success) {
+                            process.stderr.write(`\n⚠️ File failed (${msg.filePath}): ${msg.error}\n`);
+                        }
+                        assignNextTask();
+                    });
 
-                worker.on("message", (msg) => {
-                    if (msg.success && msg.result) {
-                        files.push(msg.result);
-                        cache[msg.filePath] = { fingerprint: msg.fingerprint, data: msg.result };
-                    } else if (!msg.success) {
-                        process.stderr.write(`\n⚠️ File failed (${msg.filePath}): ${msg.error}\n`);
+                    worker.on("error", (err) => {
+                        process.stderr.write(`\n⚠️ Fatal Worker Crash: ${err.message}\n`);
+                        worker.terminate().then(resolve);
+                    });
+
+                    function assignNextTask() {
+                        if (currentIndex >= pathsToProcess.length) {
+                            worker.terminate().then(resolve);
+                            return;
+                        }
+                        const task = pathsToProcess[currentIndex++];
+                        worker.postMessage({ filePath: task.filePath, fingerprint: task.fingerprint, rootDirectory: sourceDirectory });
                     }
+
                     assignNextTask();
                 });
-
-                worker.on("error", (err) => {
-                    process.stderr.write(`\n⚠️ Fatal Worker Crash: ${err.message}\n`);
-                    worker.terminate().then(resolve);
-                });
-
-                function assignNextTask() {
-                    if (currentIndex >= pathsToProcess.length) {
-                        worker.terminate().then(resolve);
-                        return;
-                    }
-                    const task = pathsToProcess[currentIndex++];
-                    worker.postMessage({ filePath: task.filePath, fingerprint: task.fingerprint, rootDirectory: sourceDirectory });
-                }
-
-                assignNextTask();
-            });
-        })
-    );
+            })
+        );
+    }
 
     // Save newly parsed data back to .analytics_cache.json
     const tempCachePath = `${cachePath}.${process.pid}.${Date.now()}.tmp`;

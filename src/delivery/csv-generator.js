@@ -3,7 +3,7 @@ const path = require('node:path');
 
 function escapeCsvCell(value) {
     const stringValue = String(value ?? '');
-    const sanitizedValue = /^[=+\-@]/.test(stringValue) ? `'${stringValue}` : stringValue;
+    const sanitizedValue = /^\s*[=+\-@]/.test(stringValue) ? `'${stringValue}` : stringValue;
     return `"${sanitizedValue.replace(/"/g, '""')}"`;
 }
 

@@ -42,7 +42,7 @@ parentPort.on('message', async (task) => {
                 .replace(/[^\w\s]/g, '')
                 .toLowerCase()
                 .split(/\s+/)
-                .filter(word => word.length > 1 && !STOP_WORDS.has(word));
+                .filter(word => word.length > 1 && !STOP_WORDS.has(word) && !/^\d+$/.test(word));
 
             // 🚀 OPTIMIZATION: Calculate map inside worker to drastically reduce IPC channel memory usage
             for (const word of rawWords) {

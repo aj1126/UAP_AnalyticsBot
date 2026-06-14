@@ -48,8 +48,7 @@ function fillEmptyIntervals(orderedMonths, timeline) {
 function buildKeywordSeries(files) {
     const timeline = {};
     for (const file of files) {
-        // 🚨 FIX: Extract historical dates first, fallback to OS modification if none exist
-        const documentDate = (file.dates && file.dates.length > 0) ? file.dates[0] : file.modifiedAt;
+        const documentDate = (file.dates || []).find((value) => /^[0-9]{4}-[0-9]{2}(?:-[0-9]{2})?$/.test(value)) || file.modifiedAt;
         if (!documentDate) continue;
 
         const key = monthKey(documentDate);
