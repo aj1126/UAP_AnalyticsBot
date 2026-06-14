@@ -127,40 +127,39 @@ parentPort.on("message", async (task) => {
 
         const processPdfFile = async () => {
             try {
-                const pdfParseModule = require("pdf-parse");
-
-                if (
-                    !pdfParseModule ||
-                    typeof pdfParseModule.PDFParse !== "function"
-                ) {
-                    throw new Error(
-                        "Targeted library does not export a valid PDFParse class entry point.",
-                    );
+                const pdfParseModule = require('pdf-parse');
+                
+                if (!pdfParseModule || typeof pdfParseModule.PDFParse !== 'function') {
+                    throw new Error("Targeted library does not export a valid PDFParse class entry point.");
                 }
 
                 const dataBuffer = await fsp.readFile(task.filePath);
-                const wasmData = new Uint8Array(
-                    dataBuffer.buffer,
-                    dataBuffer.byteOffset,
-                    dataBuffer.byteLength,
-                );
+                const wasmData = new Uint8Array(dataBuffer.buffer, dataBuffer.byteOffset, dataBuffer.byteLength);
+                
+                const options = { disableFontFace: true };
+                const parserInstance = new pdfParseModule.PDFParse(wasmData, options);
+                const textResult = await parserInstance.getText(); 
+                
+                // 🧹 Clean pass: scrub the output to see if it's actual words or just corrupted glyphs
+                const validText = textResult ? textResult.replace(/[^\w\s]/g, '').trim() : '';
 
-                // 🚀 Bypass font asset rendering to process raw text immediately
-                const options = {
-                    disableFontFace: true,
-                };
-
-                const parserInstance = new pdfParseModule.PDFParse(
-                    wasmData,
-                    options,
-                );
-                const textResult = await parserInstance.getText();
-
-                processTextChunk(textResult || "");
+                // 🚀 AI-Accelerated OCR Routing Node
+                if (validText.length < 20) {
+                    process.stdout.write(`\n🔍 Corrupted vector data detected in ${task.filePath.split(/[/\\]/).pop()}. Rasterizing via OCR node...`);
+                    
+                    const tesseract = require('tesseract.js');
+                    
+                    // Render the corrupted page as a clean 2D image buffer
+                    const imageBuffer = await parserInstance.getScreenshot(); 
+                    
+                    const ocrResult = await tesseract.recognize(imageBuffer, 'eng', { logger: () => {} });
+                    processTextChunk(ocrResult?.data?.text || '');
+                } else {
+                    // Standard text extraction succeeded with valid characters
+                    processTextChunk(textResult);
+                }
             } catch (error) {
-                process.stderr.write(
-                    `\n⚠️ PDF extraction skipped (${task.filePath}): ${error.message}\n`,
-                );
+                process.stderr.write(`\n⚠️ PDF extraction skipped (${task.filePath}): ${error.message}\n`);
             }
         };
         const processImageFile = async () => {
