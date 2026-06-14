@@ -80,6 +80,9 @@ The current Node ingestion pipeline only analyzes text-oriented files.
 | `.csv` | Ingested by the active Node pipeline |
 | `.log` | Ingested by the active Node pipeline |
 | `.pdf` | Ingested by the active Node pipeline |
+| `.png` | Ingested by the active Node pipeline |
+| `.jpg` | Ingested by the active Node pipeline |
+| `.jpeg` | Ingested by the active Node pipeline |
 <!-- GENERATED:supported-file-types:END -->
 
 ## Repository Layout
@@ -87,7 +90,7 @@ The current Node ingestion pipeline only analyzes text-oriented files.
 <!-- GENERATED:repo-layout:START -->
 - `src/index.js` — Node CLI entry point.
 - `src/pipeline.js` — Pipeline coordinator that assembles all analytics tiers.
-- `src/ingestion/file-ingestion.js` — Read-only recursive file ingestion for supported text files.
+- `src/ingestion/file-ingestion.js` — Read-only recursive file ingestion for supported files.
 - `src/analytics/` — Descriptive, diagnostic, predictive, and prescriptive analytics modules.
 - `test/pipeline.test.js` — Node test coverage for core pipeline behavior.
 - `docs/architecture.md` — Hand-authored architecture overview for current and planned system design.

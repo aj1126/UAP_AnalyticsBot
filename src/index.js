@@ -51,8 +51,7 @@ async function main() {
     if (isWatchMode) {
         process.stdout.write(`👀 Watching directory for changes: ${sourceDirectory}\n`);
         const watcher = chokidar.watch(sourceDirectory, {
-            // 🧹 Minor polish: Restrict ignored regex to strict ends-with path
-            ignored: [/(^|[\/\\])\../, /node_modules/, /data_exports[\/\\]?$/],
+            ignored: [/(^|[\/\\])\../, /node_modules/, /[\/\\]data_exports([\/\\]|$)/],
             persistent: true, ignoreInitial: false
         });
 

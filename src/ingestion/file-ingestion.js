@@ -69,7 +69,10 @@ async function ingestDirectory(rootDirectory, options = {}) {
 
     // Evict stale cache keys scoped to this sourceDirectory
     for (const key of Object.keys(cache)) {
-        if (key.startsWith(sourceDirectory) && !visitedPaths.has(key)) {
+        if (
+            (key === sourceDirectory || key.startsWith(sourceDirectory + path.sep)) &&
+            !visitedPaths.has(key)
+        ) {
             delete cache[key];
         }
     }
