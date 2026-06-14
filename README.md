@@ -80,6 +80,9 @@ The current Node ingestion pipeline only analyzes text-oriented files.
 | `.csv` | Ingested by the active Node pipeline |
 | `.log` | Ingested by the active Node pipeline |
 | `.pdf` | Ingested by the active Node pipeline |
+| `.png` | Ingested by the active Node pipeline |
+| `.jpg` | Ingested by the active Node pipeline |
+| `.jpeg` | Ingested by the active Node pipeline |
 <!-- GENERATED:supported-file-types:END -->
 
 ## Repository Layout
@@ -87,7 +90,7 @@ The current Node ingestion pipeline only analyzes text-oriented files.
 <!-- GENERATED:repo-layout:START -->
 - `src/index.js` — Node CLI entry point.
 - `src/pipeline.js` — Pipeline coordinator that assembles all analytics tiers.
-- `src/ingestion/file-ingestion.js` — Read-only recursive file ingestion for supported text files.
+- `src/ingestion/file-ingestion.js` — Read-only recursive file ingestion for supported files.
 - `src/analytics/` — Descriptive, diagnostic, predictive, and prescriptive analytics modules.
 - `test/pipeline.test.js` — Node test coverage for core pipeline behavior.
 - `docs/architecture.md` — Hand-authored architecture overview for current and planned system design.
@@ -124,6 +127,99 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 - Preserve strict read-only behavior for source directories.
 - When adding analytics, classify behavior under one of the four analytics tiers.
 - Update [docs/architecture.md](docs/architecture.md) when implementation changes affect current-vs-planned system boundaries.
+
+
+<br>
+
+
+
+## ⚙️ Installation & Setup
+
+**Prerequisites:** Ensure you have [Node.js](https://nodejs.org/) installed (version 18, 20, or 22+ recommended).
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/aj1126/uap_analyticsbot.git
+cd uap_analyticsbot
+
+```
+
+
+2. **Install dependencies:**
+This project installs as a standard Node.js CLI package, so there are no extra native build steps required for the current worker-thread ingestion flow. Simply run:
+```bash
+npm install
+
+```
+
+
+3. **Verify the installation:**
+Run the local test suite to ensure the multithreaded worker pool and caching engine are functioning correctly on your machine:
+```bash
+npm test
+
+```
+
+
+*(If all tests pass green, you are ready to start analyzing documents!)*
+
+
+---
+
+<br>
+
+
+
+
+## Usage
+
+
+To run the AnalyticsBot, simply pass the target directory containing your text files as the first argument:
+
+```bash
+node src/index.js ./my_folder/
+
+```
+
+By default, this will parse the documents and output a formatted JSON report directly to your console.
+
+### 👀 Watch Mode
+
+Keep the pipeline running in the background. It will automatically re-analyze the documents and recalculate the math whenever you add, edit, or delete a file in the target directory:
+
+```bash
+node src/index.js ./my_folder/ --watch
+
+```
+
+### 🖨️ Report Generation
+
+Instead of dumping JSON directly to the console, you can generate formatted report files that are automatically saved to the `/data_exports/` directory:
+
+```bash
+node src/index.js ./my_folder/ --format=md
+
+```
+
+*(Supports `md` for Markdown or `csv` for spreadsheet datasets).*
+
+
+---
+<br>
+
+### 🚀 Advanced Usage
+
+The v1.2.0 AnalyticsBot engine supports multithreading and memoization caching. You can control these via CLI arguments:
+
+* `node src/index.js ./my_folder --workers=4` : Manually set the number of Node.js worker threads (defaults to max CPU cores).
+* `node src/index.js ./my_folder --clear-cache` : Bypasses the `.analytics_cache.json` file and forces a fresh read of all documents.
+* `node src/index.js ./my_folder --format=csv` : Exports the final report as a spreadsheet-compatible `.csv` file.
+
+<br>
+<br>
+<br>
+
+
 
 ## 🚀 Planned Technical Optimizations
 

@@ -1,124 +1,133 @@
-const { parentPort } = require("node:worker_threads");
-const fs = require("node:fs");
-const path = require("node:path");
-const readline = require("node:readline");
-const { promises: fsp } = require("node:fs");
-const nlp = require("compromise");
+const path = require('node:path');
+const { parentPort } = require('node:worker_threads');
+const fs = require('node:fs');
+const fsp = require('node:fs/promises');
+const readline = require('node:readline');
+const nlp = require('compromise');
 
-// Protect the background V8 isolate from abrupt asynchronous library crashes
-process.on("unhandledRejection", (reason) => {
-    parentPort.postMessage({ success: false, error: reason?.message || String(reason) });
-});
+const TEXT_EXTENSIONS = new Set(['.txt', '.md', '.json', '.csv', '.log']);
+const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg']);
+const SUPPORTED_EXTENSIONS = new Set([...TEXT_EXTENSIONS, ...IMAGE_EXTENSIONS, '.pdf']);
 
-const TEXT_EXTENSIONS = new Set([".txt", ".md", ".json", ".csv", ".log"]);
-const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg"]);
-const SUPPORTED_EXTENSIONS = new Set([...TEXT_EXTENSIONS, ...IMAGE_EXTENSIONS, ".pdf"]);
-
+// ✨ Advanced Stop-Word Culling Dictionary
 const STOP_WORDS = new Set([
-    "the", "of", "to", "and", "in", "a", "for", "on", "that", "is", "it", 
-    "with", "as", "was", "at", "by", "be", "this", "an", "are", "from", 
-    "or", "which", "will", "not", "have", "has", "but", "they", "their", 
-    "we", "you", "i", "he", "she", "my", "his", "her", "its", "our", "your",
-    "there", "can", "if", "would", "about", "who", "what", "where", "when", "how"
+    'a', 'about', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
+    'how', 'i', 'in', 'is', 'it', 'of', 'on', 'or', 'that', 'the', 'this',
+    'to', 'was', 'what', 'when', 'where', 'who', 'will', 'with'
 ]);
 
-function normalizeWords(text) {
-    const rawWords = text.toLowerCase().match(/[a-z0-9']+/g) ?? [];
-    return rawWords.filter(word => !STOP_WORDS.has(word) && isNaN(word) && word.length > 1);
-}
-
-function extractDates(text) {
-    const doc = nlp(text);
-    return [...new Set(doc.match("#Date").out("array"))];
-}
-
-function extractLocations(text) {
-    const doc = nlp(text);
-    const knownPlaces = doc.match("#Place").out("array");
-    const contextualPlaces = doc.match("(in|at|near|location) #ProperNoun").not("(in|at|near|location)").out("array");
-    return [...new Set([...knownPlaces, ...contextualPlaces])];
-}
-
-async function processTextData(text, words, dates, locations) {
-    if (!text) return;
-    words.push(...normalizeWords(text));
-    extractDates(text).forEach(date => dates.add(date));
-    extractLocations(text).forEach(loc => locations.add(loc));
-}
-
-async function readFileData(filePath, rootDirectory) {
-    const extension = path.extname(filePath).toLowerCase();
-    if (!SUPPORTED_EXTENSIONS.has(extension)) return null;
-
-    const stats = await fsp.stat(filePath);
-    const words = [];
-    const dates = new Set();
-    const locations = new Set();
-    let metadata = {}; 
-
-    if (TEXT_EXTENSIONS.has(extension)) {
-        const stream = fs.createReadStream(filePath, { encoding: "utf8" });
-        const lineReader = readline.createInterface({ input: stream, crlfDelay: Infinity });
-        for await (const line of lineReader) await processTextData(line, words, dates, locations);
-        stream.destroy();
-    } else if (extension === ".pdf") {
-        const dataBuffer = await fsp.readFile(filePath);
-        let extractedText = "";
-
-        try {
-            const pdfParse = require("pdf-parse"); 
-            const parseFn = typeof pdfParse === "function" ? pdfParse : pdfParse.default;
-            const pdfData = await parseFn(dataBuffer);
-            extractedText = pdfData.text || "";
-            metadata = pdfData.info || {};
-        } catch (err) { /* OCR Fallback fallback loop logic flags */ }
-
-        if (extractedText.trim().length < 50) {
-            const tail = dataBuffer.toString("utf8", Math.max(0, dataBuffer.length - 1024));
-            
-            if (tail.includes("%%EOF") || tail.includes("startxref")) {
-                try {
-                    const mupdf = await import("mupdf");
-                    const tesseract = require("tesseract.js");
-                    
-                    const doc = mupdf.Document.openDocument(dataBuffer, "application/pdf");
-                    let ocrText = ""; 
-                    for (let i = 0; i < doc.countPages(); i++) {
-                        const page = doc.loadPage(i);
-                        const pixmap = page.toPixmap(mupdf.Matrix.scale(2, 2), mupdf.ColorSpace.DeviceRGB, false);
-                        const { data: { text } } = await tesseract.recognize(Buffer.from(pixmap.asPNG()), "eng", { logger: () => {} });
-                        ocrText += text + " ";
-                    }
-                    if (ocrText.trim().length > 0) extractedText = ocrText;
-                } catch (ocrError) { /* Fail safely over to parsed text metadata arrays */ }
-            }
-        }
-        await processTextData(extractedText, words, dates, locations);
-    } else if (IMAGE_EXTENSIONS.has(extension)) {
-        const tesseract = require("tesseract.js");
-        const { data: { text } } = await tesseract.recognize(filePath, "eng", { logger: () => {} });
-        await processTextData(text, words, dates, locations);
-    }
-
-    return {
-        path: filePath,
-        relativePath: path.relative(rootDirectory, filePath),
-        extension,
-        size: stats.size,
-        createdAt: stats.birthtime.toISOString(),
-        modifiedAt: stats.mtime.toISOString(),
-        words,
-        dates: [...dates],
-        locations: [...locations],
-        metadata, 
-    };
-}
-
-parentPort.on("message", async ({ filePath, rootDirectory }) => {
+parentPort.on('message', async (task) => {
     try {
-        const result = await readFileData(filePath, rootDirectory);
-        parentPort.postMessage({ success: true, result });
+        const extension = path.extname(task.filePath).toLowerCase();
+        if (!SUPPORTED_EXTENSIONS.has(extension)) {
+            parentPort.postMessage({
+                success: true,
+                filePath: task.filePath,
+                fingerprint: task.fingerprint
+            });
+            return;
+        }
+
+        const stats = await fsp.stat(task.filePath);
+        
+        const dates = new Set();
+        const locations = new Set();
+        const wordFrequency = {};
+        let totalWords = 0;
+
+        const processTextChunk = (text) => {
+            if (!text) return;
+
+            const rawWords = text
+                .replace(/[^\w\s]/g, '')
+                .toLowerCase()
+                .split(/\s+/)
+                .filter(word => word.length > 1 && !STOP_WORDS.has(word) && !/^\d+$/.test(word));
+
+            // 🚀 OPTIMIZATION: Calculate map inside worker to drastically reduce IPC channel memory usage
+            for (const word of rawWords) {
+                wordFrequency[word] = (wordFrequency[word] || 0) + 1;
+            }
+            totalWords += rawWords.length;
+
+            const doc = nlp(text);
+            for (const value of doc.match('#Date').out('array')) {
+                dates.add(value);
+            }
+            for (const value of doc.match('#Place').out('array')) {
+                locations.add(value);
+            }
+
+            for (const match of text.matchAll(/Date:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})/gi)) {
+                dates.add(match[1]);
+            }
+            for (const match of text.matchAll(/Location:\s*([A-Za-z][A-Za-z\s'-]*)/gi)) {
+                locations.add(match[1].trim());
+            }
+        };
+
+        const processTextFile = async () => {
+            const fileStream = fs.createReadStream(task.filePath, { encoding: 'utf-8' });
+            const lines = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
+
+            try {
+                for await (const line of lines) {
+                    processTextChunk(line);
+                }
+            } finally {
+                lines.close();
+                fileStream.destroy();
+            }
+        };
+
+        const processPdfFile = async () => {
+            try {
+                const pdfParse = require('pdf-parse');
+                const parseFn = typeof pdfParse === 'function' ? pdfParse : pdfParse.default;
+                const dataBuffer = await fsp.readFile(task.filePath);
+                const pdfResult = await parseFn(dataBuffer);
+                processTextChunk(pdfResult?.text || '');
+            } catch (error) {
+                process.stderr.write(`\n⚠️ PDF extraction skipped (${task.filePath}): ${error.message}\n`);
+            }
+        };
+
+        const processImageFile = async () => {
+            try {
+                const tesseract = require('tesseract.js');
+                const result = await tesseract.recognize(task.filePath, 'eng', { logger: () => {} });
+                processTextChunk(result?.data?.text || '');
+            } catch (error) {
+                process.stderr.write(`\n⚠️ Image OCR skipped (${task.filePath}): ${error.message}\n`);
+            }
+        };
+
+        if (TEXT_EXTENSIONS.has(extension)) {
+            await processTextFile();
+        } else if (extension === '.pdf') {
+            await processPdfFile();
+        } else if (IMAGE_EXTENSIONS.has(extension)) {
+            await processImageFile();
+        }
+
+        parentPort.postMessage({
+            success: true,
+            filePath: task.filePath,
+            fingerprint: task.fingerprint,
+            result: {
+                fileName: task.filePath.split(/[/\\]/).pop(),
+                relativePath: task.rootDirectory ? path.relative(task.rootDirectory, task.filePath) : task.filePath,
+                extension,
+                size: stats.size,
+                modifiedAt: stats.mtime.toISOString(),
+                wordFrequency, 
+                totalWords,
+                uniqueWords: Object.keys(wordFrequency),
+                dates: [...dates],
+                locations: [...locations]
+            }
+        });
     } catch (error) {
-        parentPort.postMessage({ success: false, error: error.message, filePath });
+        parentPort.postMessage({ success: false, filePath: task.filePath, error: error.message });
     }
 });
