@@ -126,28 +126,43 @@ parentPort.on("message", async (task) => {
         };
 
         const processPdfFile = async () => {
-    try {
-        const pdfParseModule = require('pdf-parse');
-        
-        if (!pdfParseModule || typeof pdfParseModule.PDFParse !== 'function') {
-            throw new Error("Targeted library does not export a valid PDFParse class entry point.");
-        }
+            try {
+                const pdfParseModule = require("pdf-parse");
 
-        const dataBuffer = await fsp.readFile(task.filePath);
-        
-        // 🚀 Convert Node Buffer to a strict Uint8Array view
-        const wasmData = new Uint8Array(dataBuffer.buffer, dataBuffer.byteOffset, dataBuffer.byteLength);
-        
-        // Pass the compliant typed array into the constructor
-        const parserInstance = new pdfParseModule.PDFParse(wasmData);
-        const textResult = await parserInstance.getText(); 
-        
-        processTextChunk(textResult || '');
-    } catch (error) {
-        process.stderr.write(`\n⚠️ PDF extraction skipped (${task.filePath}): ${error.message}\n`);
-    }
-};
+                if (
+                    !pdfParseModule ||
+                    typeof pdfParseModule.PDFParse !== "function"
+                ) {
+                    throw new Error(
+                        "Targeted library does not export a valid PDFParse class entry point.",
+                    );
+                }
 
+                const dataBuffer = await fsp.readFile(task.filePath);
+                const wasmData = new Uint8Array(
+                    dataBuffer.buffer,
+                    dataBuffer.byteOffset,
+                    dataBuffer.byteLength,
+                );
+
+                // 🚀 Bypass font asset rendering to process raw text immediately
+                const options = {
+                    disableFontFace: true,
+                };
+
+                const parserInstance = new pdfParseModule.PDFParse(
+                    wasmData,
+                    options,
+                );
+                const textResult = await parserInstance.getText();
+
+                processTextChunk(textResult || "");
+            } catch (error) {
+                process.stderr.write(
+                    `\n⚠️ PDF extraction skipped (${task.filePath}): ${error.message}\n`,
+                );
+            }
+        };
         const processImageFile = async () => {
             try {
                 const tesseract = require("tesseract.js");
