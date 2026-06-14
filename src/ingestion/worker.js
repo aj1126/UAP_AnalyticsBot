@@ -125,43 +125,60 @@ parentPort.on("message", async (task) => {
             }
         };
 
-        const processPdfFile = async () => {
-            try {
-                const pdfParseModule = require('pdf-parse');
-                
-                if (!pdfParseModule || typeof pdfParseModule.PDFParse !== 'function') {
-                    throw new Error("Targeted library does not export a valid PDFParse class entry point.");
-                }
+const processPdfFile = async () => {
+    try {
+        const pdfParseModule = require('pdf-parse');
+        const path = require('path');
+        const fsp = require('fs/promises');
 
-                const dataBuffer = await fsp.readFile(task.filePath);
-                const wasmData = new Uint8Array(dataBuffer.buffer, dataBuffer.byteOffset, dataBuffer.byteLength);
-                
-                const options = { disableFontFace: true };
-                const parserInstance = new pdfParseModule.PDFParse(wasmData, options);
-                const textResult = await parserInstance.getText(); 
-                
-                // 🧹 Clean pass: scrub the output to see if it's actual words or just corrupted glyphs
-                const validText = textResult ? textResult.replace(/[^\w\s]/g, '').trim() : '';
+        // 1. Resolve standard fonts path to silence the asset pipeline warning
+        const standardFontsPath = path.join(path.dirname(require.resolve('pdf-parse')), '../pdfjs-dist/standard_fonts/');
 
-                // 🚀 AI-Accelerated OCR Routing Node
-                if (validText.length < 20) {
-                    process.stdout.write(`\n🔍 Corrupted vector data detected in ${task.filePath.split(/[/\\]/).pop()}. Rasterizing via OCR node...`);
-                    
-                    const tesseract = require('tesseract.js');
-                    
-                    // Render the corrupted page as a clean 2D image buffer
-                    const imageBuffer = await parserInstance.getScreenshot(); 
-                    
-                    const ocrResult = await tesseract.recognize(imageBuffer, 'eng', { logger: () => {} });
-                    processTextChunk(ocrResult?.data?.text || '');
-                } else {
-                    // Standard text extraction succeeded with valid characters
-                    processTextChunk(textResult);
-                }
-            } catch (error) {
-                process.stderr.write(`\n⚠️ PDF extraction skipped (${task.filePath}): ${error.message}\n`);
-            }
+        const dataBuffer = await fsp.readFile(task.filePath);
+        const wasmData = new Uint8Array(dataBuffer.buffer, dataBuffer.byteOffset, dataBuffer.byteLength);
+        
+        const options = { 
+            disableFontFace: false,
+            standardFontDataUrl: standardFontsPath
         };
+
+        const parserInstance = new pdfParseModule.PDFParse(wasmData, options);
+        const textResult = await parserInstance.getText(); 
+        
+        // 2. Advanced Mojibake Boolean Node
+        // Check vowel density to determine if the vector string is natural language or scrambled alphanumerics.
+        const validText = textResult ? textResult.replace(/[^\w\s]/g, '').trim() : '';
+        const vowelMatch = validText.match(/[aeiouyAEIOUY]/g);
+        const vowelDensity = vowelMatch ? (vowelMatch.length / validText.length) : 0;
+
+        // If the string is too short or lacks the linguistic density of English, route to OCR.
+        if (validText.length < 20 || vowelDensity < 0.15 || vowelDensity > 0.5) {
+            process.stdout.write(`\n🔍 Corrupted vector geometry detected in ${path.basename(task.filePath)}. Rasterizing via MuPDF & OCR...`);
+            
+            const mupdf = require('mupdf');
+            const tesseract = require('tesseract.js');
+            
+            // Load document into MuPDF's memory pointer
+            const doc = mupdf.Document.openDocument(dataBuffer, "application/pdf");
+            const page = doc.loadPage(0); // Isolate the first sheet for processing
+            
+            // Render out a 2D sprite sheet (scaled 2x for clean OCR rasterization)
+            const pixmap = page.toPixmap(mupdf.Matrix.scale(2, 2), mupdf.ColorSpace.DeviceRGB, false);
+            const imageBuffer = pixmap.asPNG();
+            
+            // Free WebAssembly memory pointers to prevent memory leaks in the worker pool
+            page.destroy();
+            doc.destroy();
+            
+            const ocrResult = await tesseract.recognize(imageBuffer, 'eng', { logger: () => {} });
+            processTextChunk(ocrResult?.data?.text || '');
+        } else {
+            processTextChunk(textResult);
+        }
+    } catch (error) {
+        process.stderr.write(`\n⚠️ PDF extraction skipped (${task.filePath}): ${error.message}\n`);
+    }
+};
         const processImageFile = async () => {
             try {
                 const tesseract = require("tesseract.js");
