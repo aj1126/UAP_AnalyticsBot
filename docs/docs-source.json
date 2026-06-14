@@ -26,7 +26,7 @@
       "description": "Auto-generate CHANGELOG.md, bump the semantic version, and create a Git release tag based on conventional commit history."
     }
   ],
-  "supportedFileTypes": [".txt", ".md", ".json", ".csv", ".log", ".pdf"],
+  "supportedFileTypes": [".txt", ".md", ".json", ".csv", ".log", ".pdf", ".png", ".jpg", ".jpeg"],
   "repoLayout": [
     {
       "path": "src/index.js",
@@ -38,7 +38,7 @@
     },
     {
       "path": "src/ingestion/file-ingestion.js",
-      "description": "Read-only recursive file ingestion for supported text files."
+      "description": "Read-only recursive file ingestion for supported files."
     },
     {
       "path": "src/analytics/",

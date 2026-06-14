@@ -56,14 +56,16 @@ npm start -- "C:\Path\To\Folder" > analytics_report.json
 
 ## Supported File Types
 
-Currently, the ingestion engine natively parses the following text-based extensions:
+Currently, the ingestion engine natively parses the following extensions:
 * `.txt`
 * `.md`
 * `.json`
 * `.csv`
 * `.log`
-
-*(Note: Binary and multimedia extraction, such as PDF parsing and Image OCR, are tracked for a future development stage).*
+* `.pdf`
+* `.png`
+* `.jpg`
+* `.jpeg`
 
 ## Testing & Validation
 

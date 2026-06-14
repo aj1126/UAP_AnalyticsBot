@@ -6,7 +6,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "node --test",
+    "test": "node --test --experimental-test-coverage",
     "docs:generate": "node scripts/generate-docs.js",
     "docs:check": "node scripts/generate-docs.js --check && node scripts/validate-docs.js",
     "release": "commit-and-tag-version",

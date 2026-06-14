@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+npm run docs:generate || exit 1
+git add docs/ || exit 1
+npm test || exit 1
+npm run docs:check || exit 1
