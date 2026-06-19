@@ -1,6 +1,7 @@
 # UAP AnalyticsBot Rules & Architecture
 
-Inherited Rules: Reference and adhere to the global user/system ruleset at `~/.global_ai_rules.md`.
+- **Global Config Reference**: Inherits from standard system configurations at `C:\Users\ajjuk\.gemini\config\AGENTS.md` and `~/.global_ai_rules.md`.
+
 
 ## Project Structure
 *   `src/index.js` — Node CLI entry point.

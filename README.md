@@ -4,6 +4,8 @@
 [![Documentation](https://github.com/aj1126/UAP_AnalyticsBot/actions/workflows/docs.yml/badge.svg)](https://github.com/aj1126/UAP_AnalyticsBot/actions/workflows/docs.yml)
 [![Node.js Support](https://img.shields.io/badge/node-%3E%3D20.x-green.svg)](https://nodejs.org/)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+[![Coverage](https://img.shields.io/badge/Coverage-94.89%25-brightgreen)](#)
+[![Version](https://img.shields.io/badge/Version-1.0.0-blue)](#)
 
 ## Core Loop: Ingest -> Analyze -> Report
 
