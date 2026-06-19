@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org",
+  "title": "invoke_subagent",
+  "description": "Delegates a validated project prompt workspace definition down to a specialized execution subagent.",
+  "type": "object",
+  "properties": {
+    "target_agent": {
+      "type": "string",
+      "enum": ["teamwork_preview", "code_writer", "telemetry_validator"],
+      "description": "The specific downstream AI subagent identity receiving the task context."
+    },
+    "context_payload": {
+      "type": "object",
+      "properties": {
+        "working_directory": {
+          "type": "string",
+          "description": "Absolute file system root path of the target code repository.",
+          "examples": ["E:\\Repos\\UAP_Analytics"]
+        },
+        "requirements": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of system requirements parsed out of the workspace planning phase."
+        },
+        "current_status": {
+          "type": "string",
+          "description": "The tracking identifier indicating the current step in the development loop."
+        }
+      },
+      "required": ["working_directory", "requirements", "current_status"]
+    }
+  },
+  "required": ["target_agent", "context_payload"]
+}

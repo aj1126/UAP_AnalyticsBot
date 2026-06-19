@@ -1,5 +1,10 @@
 # UAP AnalyticsBot
 
+[![CI Pipeline](https://github.com/aj1126/UAP_AnalyticsBot/actions/workflows/test.yml/badge.svg)](https://github.com/aj1126/UAP_AnalyticsBot/actions/workflows/test.yml)
+[![Documentation](https://github.com/aj1126/UAP_AnalyticsBot/actions/workflows/docs.yml/badge.svg)](https://github.com/aj1126/UAP_AnalyticsBot/actions/workflows/docs.yml)
+[![Node.js Support](https://img.shields.io/badge/node-%3E%3D20.x-green.svg)](https://nodejs.org/)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+
 ## Core Loop: Ingest -> Analyze -> Report
 
 UAP AnalyticsBot is a file-first analytics system built around a repeatable three-stage loop:

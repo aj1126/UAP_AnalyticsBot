@@ -1,0 +1,23 @@
+# UAP AnalyticsBot Rules & Architecture
+
+Inherited Rules: Reference and adhere to the global user/system ruleset at `~/.global_ai_rules.md`.
+
+## Project Structure
+*   `src/index.js` — Node CLI entry point.
+*   `src/pipeline.js` — Pipeline coordinator that assembles all analytics tiers.
+*   `src/ingestion/file-ingestion.js` — Read-only recursive file ingestion for supported files.
+*   `src/analytics/` — Descriptive, diagnostic, predictive, and prescriptive analytics modules.
+*   `test/` — Native Node.js test suite.
+*   `scripts/` — Helper scripts for generating and validating docs.
+*   `ingestion.py` — Ingestion scanner python script.
+
+## Tech Stack & Conventions
+*   **JavaScript**: CommonJS format (`require`/`module.exports`), Node.js runtime.
+*   **Python**: Python 3 code for ingestion. Path to local venv interpreter is `.venv/Scripts/python` (Windows).
+*   **Testing**: Native Node.js test runner (`node --test`). Avoid using Mocha or Jest.
+*   **Formatting/Linting**: Handled via editor extensions using global rules. Do not create local config files (e.g., `.eslintrc`, `.prettierrc`, `.ruff.toml`).
+
+## CLI Commands
+*   Run tests: `npm test`
+*   Build docs: `npm run docs:generate`
+*   Verify docs: `npm run docs:check`

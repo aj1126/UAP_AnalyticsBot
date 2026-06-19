@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node src/index.js",
     "test": "node --test --experimental-test-coverage",
+    "verify": "node verify.js",
     "docs:generate": "node scripts/generate-docs.js",
     "docs:check": "node scripts/generate-docs.js --check && node scripts/validate-docs.js",
     "prepare": "husky",
