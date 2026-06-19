@@ -7,6 +7,28 @@
 [![Coverage](https://img.shields.io/badge/Coverage-94.89%25-brightgreen)](#)
 [![Version](https://img.shields.io/badge/Version-1.0.0-blue)](#)
 
+## Table of Contents
+
+- [Core Loop: Ingest &rarr; Analyze &rarr; Report](#core-loop-ingest---analyze---report)
+- [Analytics Scope](#analytics-scope)
+- [Core Features](#core-features)
+- [Telemetry & Extension Pipeline](#telemetry--extension-pipeline)
+- [Current Implementation](#current-implementation)
+- [CLI Runtime Behavior](#cli-runtime-behavior)
+- [Command Reference](#command-reference)
+- [Supported File Types](#supported-file-types)
+- [Repository Layout](#repository-layout)
+- [Testing](#testing)
+- [Documentation Workflow](#documentation-workflow)
+- [Installation & Setup](#installation--setup)
+- [Usage](#usage)
+  - [Watch Mode](#watch-mode)
+  - [Report Generation](#report-generation)
+  - [Advanced Usage](#advanced-usage)
+- [Planned Technical Optimizations](#planned-technical-optimizations)
+- [Notes for Contributors and Copilot](#notes-for-contributors-and-copilot)
+- [Non-Destructive Guarantee](#non-destructive-guarantee)
+
 ## Core Loop: Ingest -> Analyze -> Report
 
 UAP AnalyticsBot is a file-first analytics system built around a repeatable three-stage loop:
@@ -37,6 +59,16 @@ The analysis stage is intentionally split into four tiers:
   * **Predictive:** Next-likely location hotspots based on frequency modeling.
   * **Prescriptive:** Automated recommendations for folder restructuring and missing metadata alerts.
 * **Automated Markdown Reporting:** Formats raw JSON telemetry into a clean, human-readable intelligence report.
+
+## Telemetry & Extension Pipeline
+
+UAP AnalyticsBot features a repository operational telemetry parsing, storage, and agent-spawning pipeline to continuously stream and monitor developer workflows.
+
+* **Database Ingestion (`src/telemetry/db.js`)**: Manages the local SQLite database (`uap_telemetry.db`) to store raw webhook payloads, calculated metrics, and anomaly events.
+* **Metric Ingestion & Extraction (`src/telemetry/ingestion.js`)**: Parses GitHub webhook events (e.g. pull request and push actions) to extract velocity and churn metrics (like cycle velocities, codebase churn ratios, and commit success frequencies).
+* **Validation & Drift Detection (`src/telemetry/analytics.js`)**: Detects metric drift, legacy environment configurations, and registers alerts in the SQLite database.
+* **Virtual Subagent delegation (`src/telemetry/handoff.js`)**: Simulates the `invoke_subagent` task handoff routine, formatting and forwarding analytical telemetry to AI agents.
+* **E2E Simulation (`verify.js`)**: A standalone script that injects mock webhook payloads, executes analysis, updates the database, and prints a final telemetry execution report.
 
 ## Current Implementation
 
@@ -99,7 +131,13 @@ The current Node ingestion pipeline only analyzes text-oriented files.
 - `src/pipeline.js` — Pipeline coordinator that assembles all analytics tiers.
 - `src/ingestion/file-ingestion.js` — Read-only recursive file ingestion for supported files.
 - `src/analytics/` — Descriptive, diagnostic, predictive, and prescriptive analytics modules.
+- `src/telemetry/db.js` — SQLite Database Layer for storing repository telemetry.
+- `src/telemetry/ingestion.js` — Telemetry Ingestion Engine for parsing webhook events.
+- `src/telemetry/analytics.js` — Telemetry Analytics and Drift Detection.
+- `src/telemetry/handoff.js` — Subagent Handoff Simulator (simulates invoke_subagent).
+- `verify.js` — E2E simulation script for telemetry extension.
 - `test/pipeline.test.js` — Node test coverage for core pipeline behavior.
+- `test/telemetry.test.js` — Test suite for telemetry extension.
 - `docs/architecture.md` — Hand-authored architecture overview for current and planned system design.
 - `docs/legacy-prototype.md` — Historical Python prototype reference.
 - `docs/ROADMAP.md` — Active development tracker and planned stages.
@@ -140,7 +178,7 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 
 
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 
 **Prerequisites:** Ensure you have [Node.js](https://nodejs.org/) installed (version 18, 20, or 22+ recommended).
 
@@ -190,7 +228,7 @@ node src/index.js ./my_folder/
 
 By default, this will parse the documents and output a formatted JSON report directly to your console.
 
-### 👀 Watch Mode
+### Watch Mode
 
 Keep the pipeline running in the background. It will automatically re-analyze the documents and recalculate the math whenever you add, edit, or delete a file in the target directory:
 
@@ -199,7 +237,7 @@ node src/index.js ./my_folder/ --watch
 
 ```
 
-### 🖨️ Report Generation
+### Report Generation
 
 Instead of dumping JSON directly to the console, you can generate formatted report files that are automatically saved to the `/data_exports/` directory:
 
@@ -214,7 +252,7 @@ node src/index.js ./my_folder/ --format=md
 ---
 <br>
 
-### 🚀 Advanced Usage
+### Advanced Usage
 
 The v1.2.0 AnalyticsBot engine supports multithreading and memoization caching. You can control these via CLI arguments:
 
@@ -228,7 +266,7 @@ The v1.2.0 AnalyticsBot engine supports multithreading and memoization caching. 
 
 
 
-## 🚀 Planned Technical Optimizations
+## Planned Technical Optimizations
 
 ### 1. Performance & Infrastructure
 *   **Multithreaded Ingestion**: Transition the CPU-bound WebAssembly and OCR tasks to a `Worker Pool` using `node:worker_threads` to achieve near-linear scaling on multi-core Windows 11 systems.

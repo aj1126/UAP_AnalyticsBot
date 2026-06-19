@@ -45,8 +45,32 @@
       "description": "Descriptive, diagnostic, predictive, and prescriptive analytics modules."
     },
     {
+      "path": "src/telemetry/db.js",
+      "description": "SQLite Database Layer for storing repository telemetry."
+    },
+    {
+      "path": "src/telemetry/ingestion.js",
+      "description": "Telemetry Ingestion Engine for parsing webhook events."
+    },
+    {
+      "path": "src/telemetry/analytics.js",
+      "description": "Telemetry Analytics and Drift Detection."
+    },
+    {
+      "path": "src/telemetry/handoff.js",
+      "description": "Subagent Handoff Simulator (simulates invoke_subagent)."
+    },
+    {
+      "path": "verify.js",
+      "description": "E2E simulation script for telemetry extension."
+    },
+    {
       "path": "test/pipeline.test.js",
       "description": "Node test coverage for core pipeline behavior."
+    },
+    {
+      "path": "test/telemetry.test.js",
+      "description": "Test suite for telemetry extension."
     },
     {
       "path": "docs/architecture.md",
