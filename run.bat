@@ -1,7 +1,7 @@
 @echo off
 title UAP AnalyticsBot Runner
 echo =====================================================
-echo 🚀 Running UAP AnalyticsBot...
+echo Running UAP AnalyticsBot...
 echo =====================================================
 if "%~1"=="" (
     echo [INFO] Tip: You can drag and drop a folder directly onto this script to analyze it.

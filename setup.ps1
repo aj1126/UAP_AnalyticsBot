@@ -4,7 +4,7 @@
 $ErrorActionPreference = "Stop"
 
 Write-Host "=============================================" -ForegroundColor Cyan
-Write-Host "🔍 Verifying Node.js and npm installation..." -ForegroundColor Cyan
+Write-Host "Verifying Node.js and npm installation..." -ForegroundColor Cyan
 Write-Host "=============================================" -ForegroundColor Cyan
 
 function Check-Command($cmd) {
@@ -65,7 +65,7 @@ if (-not $nodeExists -or -not $npmExists) {
         Exit 1
     }
 } else {
-    Write-Host "✅ Node.js and npm are already installed." -ForegroundColor Green
+    Write-Host "[OK] Node.js and npm are already installed." -ForegroundColor Green
     $nodeVersion = node -v
     $npmVersion = npm -v
     Write-Host "Node.js version: $nodeVersion" -ForegroundColor Gray
@@ -74,10 +74,10 @@ if (-not $nodeExists -or -not $npmExists) {
 
 # Final verification check
 if (Check-Command "npm") {
-    Write-Host "📦 Installing project dependencies via 'npm install'..." -ForegroundColor Cyan
+    Write-Host "[NPM] Installing project dependencies via 'npm install'..." -ForegroundColor Cyan
     npm install
-    Write-Host "🎉 Setup completed successfully!" -ForegroundColor Green
+    Write-Host "Setup completed successfully!" -ForegroundColor Green
 } else {
-    Write-Host "❌ Error: Could not locate npm even after setup. Please restart your terminal." -ForegroundColor Red
+    Write-Host "[ERROR] Could not locate npm even after setup. Please restart your terminal." -ForegroundColor Red
     Exit 1
 }
