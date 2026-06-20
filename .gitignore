@@ -44,3 +44,4 @@ copilot-chat-history.json
 *.log
 *.mp4
 *.pdf
+diagnostics_report.txt

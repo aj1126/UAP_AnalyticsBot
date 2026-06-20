@@ -292,10 +292,16 @@ The v1.2.0 AnalyticsBot engine supports multithreading and memoization caching. 
 * `node src/index.js ./my_folder --format=csv` : Exports the final report as a spreadsheet-compatible `.csv` file.
 
 <br>
+
+## Troubleshooting & Diagnostics
+
+If you encounter issues launching the Web GUI, installing packages, or running analyses:
+1. Double-click **`diagnose.bat`** at the root of the project.
+2. This runs comprehensive environment checks, package validation, database integrity checks, and network port analysis.
+3. Review the terminal output or the generated **`diagnostics_report.txt`** file in the root folder for troubleshooting details.
+
 <br>
 <br>
-
-
 
 ## Planned Technical Optimizations
 
