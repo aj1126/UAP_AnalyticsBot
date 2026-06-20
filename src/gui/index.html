@@ -735,8 +735,10 @@
             activeTab = tabId;
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active');
+                if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${tabId}'`)) {
+                    btn.classList.add('active');
+                }
             });
-            event.target.classList.add('active');
 
             document.querySelectorAll('.tab-panel').forEach(panel => {
                 panel.classList.remove('active');
@@ -744,8 +746,10 @@
             });
 
             const activePanel = document.getElementById(`${tabId}Panel`);
-            activePanel.classList.add('active');
-            activePanel.style.display = 'block';
+            if (activePanel) {
+                activePanel.classList.add('active');
+                activePanel.style.display = 'block';
+            }
 
             // Special reload for Telemetry dashboard
             if (tabId === 'telemetry') {
