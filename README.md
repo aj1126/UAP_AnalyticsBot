@@ -180,10 +180,15 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 
 ## Installation & Setup
 
-### Automated Setup (Windows)
-If you are on Windows, you can automatically install Node.js and all dependencies with one click:
-- Double-click **`install.bat`** at the root of the project.
-- Alternatively, open PowerShell and run:
+> [!IMPORTANT]
+> ### ⚡ Windows 1-Click Setup (Recommended)
+> Simply double-click the **`install.bat`** file at the root of the project.
+> This automatically verifies, downloads, and installs Node.js, npm, and all dependencies.
+
+### Alternative / Manual Setup
+If you prefer command-line setups or are on a non-Windows platform:
+
+- **Windows PowerShell (Automated)**: Run the following in PowerShell:
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force; .\setup.ps1
 ```
