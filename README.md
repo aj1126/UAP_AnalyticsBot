@@ -180,21 +180,25 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 
 ## Installation & Setup
 
+### Automated Setup (Windows)
+If you are on Windows, you can automatically install Node.js and all npm dependencies by opening PowerShell and running:
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; .\setup.ps1
+```
+
+### Manual Setup
 **Prerequisites:** Ensure you have [Node.js](https://nodejs.org/) installed (version 18, 20, or 22+ recommended).
 
 1. **Clone the repository:**
 ```bash
 git clone https://github.com/aj1126/uap_analyticsbot.git
 cd uap_analyticsbot
-
 ```
-
 
 2. **Install dependencies:**
 This project installs as a standard Node.js CLI package, so there are no extra native build steps required for the current worker-thread ingestion flow. Simply run:
 ```bash
 npm install
-
 ```
 
 

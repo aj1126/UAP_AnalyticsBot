@@ -13,6 +13,16 @@ Before installing the bot, ensure your system has the following dependencies ins
 
 ## Installation
 
+### Option 1: Automated Installation (Recommended for Windows)
+
+Open Windows PowerShell and run the following command to automatically verify/install Node.js and pull all required dependencies:
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; .\setup.ps1
+```
+
+### Option 2: Manual Installation
+
 Open Windows PowerShell and execute the following commands to clone the repository and install the required Node modules.
 
 ```powershell
