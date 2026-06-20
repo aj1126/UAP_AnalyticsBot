@@ -185,7 +185,11 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 > Simply double-click the **`install.bat`** file at the root of the project.
 > This automatically verifies, downloads, and installs Node.js, npm, and all dependencies.
 
-### Alternative / Manual Setup
+---
+
+<br>
+
+## Alternative & Manual Installation
 If you prefer command-line setups or are on a non-Windows platform:
 
 - **Windows PowerShell (Automated)**: Run the following in PowerShell:
