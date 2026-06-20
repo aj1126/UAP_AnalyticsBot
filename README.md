@@ -234,17 +234,23 @@ npm test
 
 ## Usage
 
-### 1. Interactive Web GUI (Recommended)
-You can launch the visual web dashboard to browse folders and view analytics and database telemetry with one click:
-- Double-click **`gui.bat`** at the root of the project.
-- Alternatively, run `npm run gui` in your terminal. This will spin up the server and open `http://localhost:3000` automatically.
+> [!TIP]
+> ### 🎨 Visual Web Dashboard (Recommended)
+> Simply double-click **`gui.bat`** at the root of the project.
+> This spins up the local server and automatically launches your default browser to browse directories, run analyses, and view telemetry metrics.
 
-### 2. 1-Click / Drag-and-Drop Runner
+---
+
+<br>
+
+### Alternative / Command Line Runners
+
+#### 1-Click / Drag-and-Drop Runner
 To run the terminal bot without typing commands:
 - **Drag-and-Drop**: Drag any data folder directly onto **`run.bat`** in Windows Explorer.
 - **Double-click**: Double-click **`run.bat`** and paste the folder path when prompted.
 
-### 3. Command Line Interface (CLI)
+#### Command Line Interface (CLI)
 To run the AnalyticsBot via command line, pass the target directory containing your files as the first argument:
 
 ```bash
