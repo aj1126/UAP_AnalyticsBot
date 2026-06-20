@@ -107,7 +107,10 @@ async function ingestDirectory(rootDirectory, options = {}) {
 
                     function assignNextTask() {
                         if (currentIndex >= pathsToProcess.length) {
-                            worker.terminate().then(resolve);
+                            worker.postMessage({ action: "close" });
+                            worker.on("exit", () => {
+                                resolve();
+                            });
                             return;
                         }
                         const task = pathsToProcess[currentIndex++];

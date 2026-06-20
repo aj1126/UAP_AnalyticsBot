@@ -87,11 +87,7 @@ test('generateAnalyticsReport passes ingestion options through to the pipeline',
                     files: [
                         {
                             fileName: 'fixture.txt',
-                            locations: ['Roswell'],
-                            dates: ['2024-01-01'],
-                            wordFrequency: { sighting: 1 },
-                            totalWords: 1,
-                            uniqueWords: ['sighting']
+                            textContent: 'Date: 2024-01-01\nLocation: Roswell\nsighting'
                         }
                     ],
                 };
@@ -171,3 +167,51 @@ test('generateCsvReport escapes spreadsheet-sensitive values', async () => {
         await fs.rm(exportsDir, { recursive: true, force: true });
     }
 });
+
+test('generateAnalyticsReport builds all analytics tiers from a generated PDF file', async () => {
+    const fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'uap-analytics-pdf-'));
+    const pdfPath = path.join(fixtureRoot, 'sighting.pdf');
+    const minimalPdf = `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 54 >>
+stream
+BT
+/F1 12 Tf
+72 712 Td
+(Date: 2024-05-01 Location: Roswell) Tj
+ET
+endstream
+endobj
+xref
+0 5
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+0000000276 00000 n
+trailer
+<< /Size 5 /Root 1 0 R >>
+startxref
+381
+%%EOF`;
+
+    try {
+        await fs.writeFile(pdfPath, minimalPdf, 'utf-8');
+        const report = await generateAnalyticsReport(fixtureRoot, { clearCache: true, workers: 1 });
+        
+        assert.equal(report.descriptive.fileCount, 1);
+        assert.deepEqual(report.descriptive.locations, ['Roswell']);
+        assert.deepEqual(report.descriptive.dates, ['2024-05-01']);
+    } finally {
+        await fs.rm(fixtureRoot, { recursive: true, force: true });
+    }
+});

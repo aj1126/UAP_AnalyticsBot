@@ -1,99 +1,64 @@
-const path = require('node:path');
 const fs = require('node:fs');
-const { spawn } = require('node:child_process');
+const path = require('node:path');
 
-/**
- * Simulates the invoke_subagent routine, formatting and forwarding payload structures to virtual subagents.
- * @param {string} subagentRole - The role of the subagent (e.g. 'analyst', 'security_auditor')
- * @param {Object} payload - Analytical data containing metrics and alerts
- * @returns {Promise<Object>} Mock subagent execution output
- */
-async function simulateHandoff(subagentRole, payload) {
-    if (!subagentRole || typeof subagentRole !== 'string') {
-        throw new Error('subagentRole must be a non-empty string');
-    }
-    if (!payload || typeof payload !== 'object') {
-        throw new Error('payload must be an object');
+async function main() {
+    const handoffId = process.argv[2];
+    if (!handoffId) {
+        console.error('Usage: node subagent-runner.js <handoffId>');
+        process.exit(1);
     }
 
-    const handoffId = `subagent-${subagentRole}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-    // 1. Format the analytical payload with metadata, metrics, and comparisons
-    const analyticalPayload = {
-        meta: {
-            subagentId: handoffId,
-            timestamp: payload.timestamp || new Date().toISOString(),
-            sourceRepository: payload.repository || 'unknown-repo',
-            role: subagentRole
-        },
-        analysis: {
-            metrics: {
-                cycleVelocity: payload.metrics?.cycleVelocity ?? null,
-                churnRatio: payload.metrics?.churnRatio ?? null,
-                successFrequency: payload.metrics?.successFrequency ?? null
-            },
-            baselines: {
-                minCycleVelocityHours: 4.0,
-                maxChurnRatio: 0.20,
-                minSuccessFrequency: 0.90
-            }
-        },
-        anomalies: payload.alerts || [],
-        instructions: _generateInstructions(subagentRole, payload.alerts || [])
-    };
-
-    // Ensure handoff directory structure exists
     const tasksDir = path.join(process.cwd(), 'data_exports', 'handoff_tasks');
-    fs.mkdirSync(tasksDir, { recursive: true });
-
-    // Write task file synchronously to prevent race conditions
+    const resultsDir = path.join(process.cwd(), 'data_exports', 'handoff_results');
     const taskPath = path.join(tasksDir, `${handoffId}.json`);
-    fs.writeFileSync(taskPath, JSON.stringify(analyticalPayload, null, 2), 'utf8');
+    const resultPath = path.join(resultsDir, `${handoffId}_result.json`);
 
-    // 2. Simulate task delegation (stdout logging)
-    console.log(`[Handoff] Delegating task to virtual subagent '${subagentRole}'`);
-    console.log(`[Handoff] Dispatch ID: ${handoffId}`);
-    console.log(`[Handoff] Context: ${JSON.stringify(analyticalPayload.analysis.metrics)}`);
+    try {
+        // Read task payload
+        if (!fs.existsSync(taskPath)) {
+            throw new Error(`Task file not found: ${taskPath}`);
+        }
+        const taskData = fs.readFileSync(taskPath, 'utf8');
+        const payload = JSON.parse(taskData);
 
-    // 3. Return synchronous mock response for unit tests
-    if (process.env.NODE_ENV === 'test') {
-        const response = _generateSubagentResponse(subagentRole, analyticalPayload);
-        return {
+        // Process subagent logic
+        const role = payload.meta?.role || 'unknown';
+        const response = generateSubagentResponse(role, payload);
+
+        // Ensure results directory exists
+        fs.mkdirSync(resultsDir, { recursive: true });
+
+        // Save result
+        const resultPayload = {
             success: true,
             handoffId,
-            dispatchedPayload: analyticalPayload,
             response
         };
+        fs.writeFileSync(resultPath, JSON.stringify(resultPayload, null, 2), 'utf8');
+        process.exit(0);
+    } catch (err) {
+        console.error(`[Runner Error] Failed to process handoff ${handoffId}:`, err.message);
+        try {
+            // Write a failure result
+            fs.mkdirSync(resultsDir, { recursive: true });
+            fs.writeFileSync(resultPath, JSON.stringify({
+                success: false,
+                handoffId,
+                error: err.message,
+                response: {
+                    status: 'FAILED',
+                    findings: `Error processing task: ${err.message}`,
+                    recommendations: []
+                }
+            }, null, 2), 'utf8');
+        } catch (writeErr) {
+            // Ignored
+        }
+        process.exit(1);
     }
-
-    // 4. Asynchronous detached process spawn for non-test environments
-    const runnerPath = path.join(__dirname, 'subagent-runner.js');
-    const child = spawn(process.execPath, [runnerPath, handoffId], {
-        detached: true,
-        stdio: 'ignore'
-    });
-    child.unref();
-
-    return {
-        success: true,
-        handoffId,
-        dispatchedPayload: analyticalPayload,
-        status: 'QUEUED'
-    };
 }
 
-function _generateInstructions(role, alerts) {
-    const instructions = [
-        "Assess telemetry indicators against project baseline goals.",
-        "Highlight significant drifts or anomalies."
-    ];
-    if (alerts.length > 0) {
-        instructions.unshift("Diagnose the root cause of the active validation alerts.");
-    }
-    return instructions;
-}
-
-function _generateSubagentResponse(role, analyticalPayload) {
+function generateSubagentResponse(role, analyticalPayload) {
     const alerts = analyticalPayload.anomalies || [];
     const hasAnomalies = alerts.length > 0;
 
@@ -194,4 +159,4 @@ function _generateSubagentResponse(role, analyticalPayload) {
     }
 }
 
-module.exports = { simulateHandoff };
+main();

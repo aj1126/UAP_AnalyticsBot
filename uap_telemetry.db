@@ -83,6 +83,27 @@
       "payload": "{\"action\":\"completed\",\"workflow_run\":{\"conclusion\":\"failure\",\"run_number\":89},\"repository\":{\"full_name\":\"aj1126/UAP_AnalyticsBot\"}}",
       "parsed_metrics": "{\"successFrequency\":0,\"conclusion\":\"failure\"}",
       "created_at": "2026-06-19T14:04:34.598Z"
+    },
+    {
+      "id": 13,
+      "event_type": "pull_request",
+      "payload": "{\"action\":\"closed\",\"pull_request\":{\"number\":404,\"created_at\":\"2026-06-19T02:00:00Z\",\"closed_at\":\"2026-06-19T08:00:00Z\",\"merged\":true,\"additions\":150,\"deletions\":50},\"repository\":{\"full_name\":\"aj1126/UAP_AnalyticsBot\"}}",
+      "parsed_metrics": "{\"cycleVelocity\":6,\"additions\":150,\"deletions\":50}",
+      "created_at": "2026-06-20T01:50:45.967Z"
+    },
+    {
+      "id": 14,
+      "event_type": "push",
+      "payload": "{\"ref\":\"refs/heads/main\",\"commits\":[{\"added\":[\"src/telemetry/analytics.js\"],\"removed\":[],\"modified\":[\"package.json\"]}],\"repository\":{\"full_name\":\"aj1126/UAP_AnalyticsBot\"}}",
+      "parsed_metrics": "{\"churnRatio\":0.3333333333333333,\"files\":[\"src/telemetry/analytics.js\",\"package.json\"]}",
+      "created_at": "2026-06-20T01:50:45.967Z"
+    },
+    {
+      "id": 15,
+      "event_type": "workflow_run",
+      "payload": "{\"action\":\"completed\",\"workflow_run\":{\"conclusion\":\"failure\",\"run_number\":89},\"repository\":{\"full_name\":\"aj1126/UAP_AnalyticsBot\"}}",
+      "parsed_metrics": "{\"successFrequency\":0,\"conclusion\":\"failure\"}",
+      "created_at": "2026-06-20T01:50:45.968Z"
     }
   ],
   "metric_summaries": [
@@ -113,6 +134,13 @@
       "churn_ratio": 0.3333333333333333,
       "success_frequency": 0,
       "created_at": "2026-06-19T14:04:34.599Z"
+    },
+    {
+      "id": 5,
+      "cycle_velocity": 6,
+      "churn_ratio": 0.3333333333333333,
+      "success_frequency": 0,
+      "created_at": "2026-06-20T01:50:45.969Z"
     }
   ],
   "alerts": [
@@ -248,6 +276,55 @@
       "message": "Drift detected: successFrequency is 0, which is below the min success frequency baseline of 0.90.",
       "details": "{\"code\":\"DRIFT_LOW_SUCCESS\",\"severity\":\"critical\",\"message\":\"Drift detected: successFrequency is 0, which is below the min success frequency baseline of 0.90.\"}",
       "created_at": "2026-06-19T14:04:34.596Z"
+    },
+    {
+      "id": 20,
+      "type": "WARN_LEGACY_VERSION",
+      "message": "Legacy rulesetVersion '1.0.0' detected. Standard baseline requires version >= 2.0.0.",
+      "details": "{\"code\":\"WARN_LEGACY_VERSION\",\"severity\":\"warning\",\"message\":\"Legacy rulesetVersion '1.0.0' detected. Standard baseline requires version >= 2.0.0.\"}",
+      "created_at": "2026-06-20T01:50:45.962Z"
+    },
+    {
+      "id": 21,
+      "type": "DRIFT_INSUFFICIENT_APPROVERS",
+      "message": "Drift detected: 'requiredApprovers' is 1, but standard ruleset requires at least 2.",
+      "details": "{\"code\":\"DRIFT_INSUFFICIENT_APPROVERS\",\"severity\":\"critical\",\"message\":\"Drift detected: 'requiredApprovers' is 1, but standard ruleset requires at least 2.\"}",
+      "created_at": "2026-06-20T01:50:45.962Z"
+    },
+    {
+      "id": 22,
+      "type": "DRIFT_SIGNED_COMMITS_DISABLED",
+      "message": "Drift detected: Signed commits must be enforced in environment 'production'.",
+      "details": "{\"code\":\"DRIFT_SIGNED_COMMITS_DISABLED\",\"severity\":\"critical\",\"message\":\"Drift detected: Signed commits must be enforced in environment 'production'.\"}",
+      "created_at": "2026-06-20T01:50:45.963Z"
+    },
+    {
+      "id": 23,
+      "type": "DRIFT_MISSING_CI_CHECK",
+      "message": "Drift detected: Required CI validation check 'docs:check' is missing from branch protection settings.",
+      "details": "{\"code\":\"DRIFT_MISSING_CI_CHECK\",\"severity\":\"critical\",\"message\":\"Drift detected: Required CI validation check 'docs:check' is missing from branch protection settings.\"}",
+      "created_at": "2026-06-20T01:50:45.964Z"
+    },
+    {
+      "id": 24,
+      "type": "DRIFT_SLOW_CYCLE",
+      "message": "Drift detected: cycleVelocity is 6 hours, which exceeds the max cycle velocity baseline of 4.0.",
+      "details": "{\"code\":\"DRIFT_SLOW_CYCLE\",\"severity\":\"critical\",\"message\":\"Drift detected: cycleVelocity is 6 hours, which exceeds the max cycle velocity baseline of 4.0.\"}",
+      "created_at": "2026-06-20T01:50:45.964Z"
+    },
+    {
+      "id": 25,
+      "type": "DRIFT_HIGH_CHURN",
+      "message": "Drift detected: churnRatio is 0.3333333333333333, which exceeds the max churn ratio baseline of 0.20.",
+      "details": "{\"code\":\"DRIFT_HIGH_CHURN\",\"severity\":\"critical\",\"message\":\"Drift detected: churnRatio is 0.3333333333333333, which exceeds the max churn ratio baseline of 0.20.\"}",
+      "created_at": "2026-06-20T01:50:45.965Z"
+    },
+    {
+      "id": 26,
+      "type": "DRIFT_LOW_SUCCESS",
+      "message": "Drift detected: successFrequency is 0, which is below the min success frequency baseline of 0.90.",
+      "details": "{\"code\":\"DRIFT_LOW_SUCCESS\",\"severity\":\"critical\",\"message\":\"Drift detected: successFrequency is 0, which is below the min success frequency baseline of 0.90.\"}",
+      "created_at": "2026-06-20T01:50:45.966Z"
     }
   ]
 }
