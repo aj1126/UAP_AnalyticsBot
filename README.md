@@ -181,10 +181,13 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 ## Installation & Setup
 
 ### Automated Setup (Windows)
-If you are on Windows, you can automatically install Node.js and all npm dependencies by opening PowerShell and running:
+If you are on Windows, you can automatically install Node.js and all dependencies with one click:
+- Double-click **`install.bat`** at the root of the project.
+- Alternatively, open PowerShell and run:
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force; .\setup.ps1
 ```
+
 
 ### Manual Setup
 **Prerequisites:** Ensure you have [Node.js](https://nodejs.org/) installed (version 18, 20, or 22+ recommended).
@@ -222,12 +225,21 @@ npm test
 
 ## Usage
 
+### 1. Interactive Web GUI (Recommended)
+You can launch the visual web dashboard to browse folders and view analytics and database telemetry with one click:
+- Double-click **`gui.bat`** at the root of the project.
+- Alternatively, run `npm run gui` in your terminal. This will spin up the server and open `http://localhost:3000` automatically.
 
-To run the AnalyticsBot, simply pass the target directory containing your text files as the first argument:
+### 2. 1-Click / Drag-and-Drop Runner
+To run the terminal bot without typing commands:
+- **Drag-and-Drop**: Drag any data folder directly onto **`run.bat`** in Windows Explorer.
+- **Double-click**: Double-click **`run.bat`** and paste the folder path when prompted.
+
+### 3. Command Line Interface (CLI)
+To run the AnalyticsBot via command line, pass the target directory containing your files as the first argument:
 
 ```bash
 node src/index.js ./my_folder/
-
 ```
 
 By default, this will parse the documents and output a formatted JSON report directly to your console.

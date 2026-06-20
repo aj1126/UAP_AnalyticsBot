@@ -6,6 +6,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
+    "gui": "node src/gui/server.js",
     "test": "node --test --experimental-test-coverage",
     "verify": "node verify.js",
     "docs:generate": "node scripts/generate-docs.js",

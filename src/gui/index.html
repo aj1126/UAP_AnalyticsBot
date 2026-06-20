@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UAP AnalyticsBot Dashboard</title>
+    
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Design Tokens & Theme Variables */
+        :root {
+            --bg-base: #0b0f19;
+            --bg-surface: rgba(17, 24, 39, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            
+            --color-primary: #8b5cf6;    /* Violet */
+            --color-secondary: #06b6d4;  /* Cyan */
+            --color-text-main: #f3f4f6;
+            --color-text-muted: #9ca3af;
+            --color-text-dark: #4b5563;
+            
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-error: #ef4444;
+            --color-info: #3b82f6;
+
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            
+            --glow-cyan: 0 0 15px rgba(6, 182, 212, 0.35);
+            --glow-violet: 0 0 15px rgba(139, 92, 246, 0.35);
+        }
+
+        /* Base Resets */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--color-text-main);
+            font-family: var(--font-body);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+        }
+
+        /* Sidebar: Directory Explorer */
+        .sidebar {
+            width: 320px;
+            background-color: rgba(15, 23, 42, 0.85);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            box-shadow: var(--glow-violet);
+        }
+
+        .logo-text {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #fff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .explorer-section {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .explorer-header {
+            font-family: var(--font-display);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .explorer-path-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--color-text-main);
+            padding: 8px 12px;
+            font-size: 12px;
+            margin-bottom: 12px;
+            font-family: monospace;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .explorer-path-input:focus {
+            border-color: var(--color-secondary);
+        }
+
+        .explorer-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .explorer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            user-select: none;
+            color: var(--color-text-muted);
+        }
+
+        .explorer-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--color-text-main);
+        }
+
+        .explorer-item.folder {
+            color: #fbbf24;
+        }
+
+        .explorer-item.folder:hover {
+            background-color: rgba(251, 191, 36, 0.1);
+        }
+
+        .explorer-item.parent-dir {
+            color: var(--color-secondary);
+            font-weight: 600;
+        }
+
+        .explorer-item.file {
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        /* Action Buttons */
+        .btn {
+            background: linear-gradient(135deg, var(--color-primary), #6d28d9);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: var(--glow-violet);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--color-text-main);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Main Panel Content */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-title h1 {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .dashboard-title p {
+            color: var(--color-text-muted);
+            font-size: 14px;
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            padding: 12px 16px;
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .tab-btn:hover {
+            color: var(--color-text-main);
+        }
+
+        .tab-btn.active {
+            color: var(--color-secondary);
+            font-weight: 600;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--color-secondary);
+            box-shadow: var(--glow-cyan);
+        }
+
+        /* Tab Content panels */
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Glassmorphism Cards */
+        .card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        /* Statistic Grid */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-family: var(--font-display);
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Custom Badges / Pills */
+        .pill-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pill-count {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--color-secondary);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        /* Correlation / Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .data-table th, .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            color: var(--color-text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Alert Display */
+        .alert-box {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--color-info);
+            background-color: rgba(59, 130, 246, 0.08);
+            margin-bottom: 12px;
+        }
+
+        .alert-box.critical {
+            border-left-color: var(--color-error);
+            background-color: rgba(239, 68, 68, 0.08);
+        }
+
+        .alert-box.warning {
+            border-left-color: var(--color-warning);
+            background-color: rgba(245, 158, 11, 0.08);
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .alert-desc {
+            font-size: 13px;
+            color: var(--color-text-muted);
+        }
+
+        /* Loading Spinner */
+        .loader-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 0;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(6, 182, 212, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--color-secondary);
+            animation: spin 1s linear infinite;
+            box-shadow: var(--glow-cyan);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            font-family: var(--font-display);
+            font-weight: 500;
+            color: var(--color-text-muted);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 0;
+            color: var(--color-text-dark);
+        }
+
+        .empty-state-title {
+            font-family: var(--font-display);
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            margin-bottom: 8px;
+        }
+
+        /* Gauge Components */
+        .gauge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .gauge-card {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .gauge-val {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--color-secondary);
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR: Local Explorer -->
+    <aside class="sidebar">
+        <header class="sidebar-header">
+            <div class="logo-icon"></div>
+            <div class="logo-text">UAP AnalyticsBot</div>
+        </header>
+        
+        <div class="explorer-section">
+            <div class="explorer-header">
+                <span>Folder Explorer</span>
+                <span style="font-size: 11px; cursor: pointer; color: var(--color-secondary);" onclick="loadExplorer()">refresh</span>
+            </div>
+            <input type="text" id="pathInput" class="explorer-path-input" placeholder="Loading folder path..." />
+            <ul id="explorerList" class="explorer-list">
+                <!-- Directory nodes load here -->
+            </ul>
+        </div>
+
+        <div style="padding: 16px; border-top: 1px solid var(--border-color);">
+            <button class="btn" style="width: 100%;" onclick="runAnalysis()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 15.3a6 6 0 1 0-8.4-8.4 6 6 0 0 0 8.4 8.4Zm0 0 6 6"/></svg>
+                Analyze Folder
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN PANEL -->
+    <main class="main-content">
+        
+        <header class="dashboard-header">
+            <div class="dashboard-title">
+                <h1 id="titlePath">Workspace Dashboard</h1>
+                <p>Descriptive, Diagnostic, Predictive, & Prescriptive local analysis</p>
+            </div>
+        </header>
+
+        <!-- Dynamic View Tabs -->
+        <nav class="tabs">
+            <button class="tab-btn active" onclick="switchTab('descriptive')">Descriptive</button>
+            <button class="tab-btn" onclick="switchTab('diagnostic')">Diagnostic & Predictive</button>
+            <button class="tab-btn" onclick="switchTab('prescriptive')">Prescriptive Actions</button>
+            <button class="tab-btn" onclick="switchTab('telemetry')">Repository Telemetry</button>
+        </nav>
+
+        <!-- Loading View -->
+        <div id="loader" class="loader-container">
+            <div class="spinner"></div>
+            <div class="loader-text">Ingesting files and parsing NLP matrices...</div>
+        </div>
+
+        <!-- Initial/Empty View -->
+        <div id="emptyState" class="empty-state">
+            <div class="empty-state-title">No Folder Analyzed Yet</div>
+            <p>Select a folder in the explorer sidebar and click **Analyze Folder** to process files.</p>
+        </div>
+
+        <!-- TAB: Descriptive -->
+        <section id="descriptivePanel" class="tab-panel active" style="display: none;">
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-num" id="statFiles">0</div>
+                    <div class="stat-label">Total Ingested Files</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="statWords">0</div>
+                    <div class="stat-label">Total Word Count</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Linguistic Keywords</h2>
+                </div>
+                <div id="keywordsList" class="pill-container">
+                    <!-- Keywords -->
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Extracted Locations</h2>
+                </div>
+                <div id="locationsList" class="pill-container">
+                    <!-- Locations -->
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Chronological Timeline Dates</h2>
+                </div>
+                <div id="datesList" class="pill-container">
+                    <!-- Dates -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: Diagnostic & Predictive -->
+        <section id="diagnosticPanel" class="tab-panel" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Location Correlation Matrices</h2>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Location</th>
+                            <th>Correlated Keywords</th>
+                            <th>Occurrences</th>
+                        </tr>
+                    </thead>
+                    <tbody id="correlationsTableBody">
+                        <!-- Correlations -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Predictive Future Timeline Forecast</h2>
+                </div>
+                <div id="predictiveForecast" style="line-height: 1.6;">
+                    <!-- Predictions -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: Prescriptive Actions -->
+        <section id="prescriptivePanel" class="tab-panel" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Data Integrity Alerts</h2>
+                </div>
+                <div id="integrityAlertsContainer">
+                    <!-- Prescriptive alerts -->
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Folder Structure Recommendations</h2>
+                </div>
+                <div id="structureRecommendations" style="line-height: 1.6;">
+                    <!-- Restructuring guidelines -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: Repository Telemetry -->
+        <section id="telemetryPanel" class="tab-panel" style="display: none;">
+            <div class="gauge-grid">
+                <div class="gauge-card">
+                    <div class="gauge-val" id="telemetryVelocity">-</div>
+                    <div class="stat-label">Cycle Velocity (Hours)</div>
+                </div>
+                <div class="gauge-card">
+                    <div class="gauge-val" id="telemetryChurn">-</div>
+                    <div class="stat-label">Code Churn Ratio</div>
+                </div>
+                <div class="gauge-card">
+                    <div class="gauge-val" id="telemetrySuccess">-</div>
+                    <div class="stat-label">Workflow Success Frequency</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">System Anomalies & Drift Alerts</h2>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Message</th>
+                            <th>Trigger Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="telemetryAlertsBody">
+                        <!-- Alerts -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Outbound Telemetry Event Log</h2>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Event Type</th>
+                            <th>Payload Info</th>
+                            <th>Ingested At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="telemetryEventsBody">
+                        <!-- Events -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Client-Side GUI Logic -->
+    <script>
+        let currentPath = '';
+        let activeTab = 'descriptive';
+
+        // Load the Local Directory Explorer on startup
+        document.addEventListener('DOMContentLoaded', () => {
+            loadExplorer();
+            loadTelemetry();
+            
+            // Allow triggering folder scan by hitting Enter on input box
+            document.getElementById('pathInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    loadExplorer(e.target.value);
+                }
+            });
+        });
+
+        // Tab Switching controller
+        function switchTab(tabId) {
+            activeTab = tabId;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('active');
+                panel.style.display = 'none';
+            });
+
+            const activePanel = document.getElementById(`${tabId}Panel`);
+            activePanel.classList.add('active');
+            activePanel.style.display = 'block';
+
+            // Special reload for Telemetry dashboard
+            if (tabId === 'telemetry') {
+                loadTelemetry();
+            }
+        }
+
+        // Fetch directory explorer listing from local server API
+        async function loadExplorer(targetPath = '') {
+            try {
+                const url = targetPath ? `/api/browse?path=${encodeURIComponent(targetPath)}` : '/api/browse';
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(`Error browsing folder: ${data.error}`);
+                    return;
+                }
+
+                currentPath = data.currentPath;
+                document.getElementById('pathInput').value = currentPath;
+                document.getElementById('titlePath').innerText = currentPath;
+
+                const list = document.getElementById('explorerList');
+                list.innerHTML = '';
+
+                // Add parent directory node if available
+                if (data.parentPath) {
+                    const li = document.createElement('li');
+                    li.className = 'explorer-item parent-dir';
+                    li.innerHTML = `📁 .. [Parent Directory]`;
+                    li.onclick = () => loadExplorer(data.parentPath);
+                    list.appendChild(li);
+                }
+
+                // Add subdirectories
+                data.directories.forEach(dir => {
+                    const li = document.createElement('li');
+                    li.className = 'explorer-item folder';
+                    li.innerHTML = `📁 ${dir}`;
+                    li.onclick = () => loadExplorer(`${currentPath}/${dir}`);
+                    list.appendChild(li);
+                });
+
+                // Add file records
+                data.files.forEach(file => {
+                    const li = document.createElement('li');
+                    li.className = 'explorer-item file';
+                    li.innerHTML = `📄 ${file}`;
+                    list.appendChild(li);
+                });
+            } catch (err) {
+                console.error('Failed to load local directory explorer.', err);
+            }
+        }
+
+        // Trigger Folder Analysis Pipeline
+        async function runAnalysis() {
+            const loader = document.getElementById('loader');
+            const empty = document.getElementById('emptyState');
+            const panels = document.querySelectorAll('.tab-panel');
+
+            // Set loading state
+            loader.style.display = 'flex';
+            empty.style.display = 'none';
+            panels.forEach(p => p.style.display = 'none');
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: currentPath })
+                });
+
+                const report = await response.json();
+                loader.style.display = 'none';
+
+                if (report.error) {
+                    alert(`Pipeline Analysis Failed: ${report.error}`);
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                renderAnalytics(report);
+            } catch (err) {
+                loader.style.display = 'none';
+                empty.style.display = 'block';
+                alert(`Pipeline Analysis Connection Error: ${err.message}`);
+            }
+        }
+
+        // Render the generated report objects on dashboard panels
+        function renderAnalytics(report) {
+            // Update stats
+            document.getElementById('statFiles').innerText = report.descriptive.filesIngested || 0;
+            document.getElementById('statWords').innerText = report.descriptive.totalWords || 0;
+
+            // 1. Descriptive Keywords
+            const kwContainer = document.getElementById('keywordsList');
+            kwContainer.innerHTML = '';
+            if (report.descriptive.keywords && report.descriptive.keywords.length > 0) {
+                report.descriptive.keywords.forEach(([word, count]) => {
+                    kwContainer.innerHTML += `<div class="pill">${word} <span class="pill-count">${count}</span></div>`;
+                });
+            } else {
+                kwContainer.innerHTML = '<span style="color: var(--color-text-dark);">No keywords extracted.</span>';
+            }
+
+            // Descriptive Locations
+            const locContainer = document.getElementById('locationsList');
+            locContainer.innerHTML = '';
+            if (report.descriptive.locations && report.descriptive.locations.length > 0) {
+                report.descriptive.locations.forEach(([loc, count]) => {
+                    locContainer.innerHTML += `<div class="pill" style="border-color: var(--color-secondary);">${loc} <span class="pill-count">${count}</span></div>`;
+                });
+            } else {
+                locContainer.innerHTML = '<span style="color: var(--color-text-dark);">No locations extracted.</span>';
+            }
+
+            // Descriptive Dates
+            const dateContainer = document.getElementById('datesList');
+            dateContainer.innerHTML = '';
+            if (report.descriptive.dates && report.descriptive.dates.length > 0) {
+                report.descriptive.dates.forEach(([date, count]) => {
+                    dateContainer.innerHTML += `<div class="pill" style="border-color: var(--color-success);">${date} <span class="pill-count">${count}</span></div>`;
+                });
+            } else {
+                dateContainer.innerHTML = '<span style="color: var(--color-text-dark);">No timeline dates extracted.</span>';
+            }
+
+            // 2. Diagnostic correlations
+            const corrBody = document.getElementById('correlationsTableBody');
+            corrBody.innerHTML = '';
+            if (report.diagnostic.locationWordCorrelations && Object.keys(report.diagnostic.locationWordCorrelations).length > 0) {
+                Object.entries(report.diagnostic.locationWordCorrelations).forEach(([loc, data]) => {
+                    const kwPills = Object.entries(data.keywords || {})
+                        .map(([word, freq]) => `<span class="pill" style="display:inline-flex; padding:2px 8px; font-size:11px; margin-right:4px;">${word}:${freq}</span>`)
+                        .join('');
+                    corrBody.innerHTML += `
+                        <tr>
+                            <td style="font-weight: 600; color: var(--color-secondary);">${loc}</td>
+                            <td>${kwPills}</td>
+                            <td>${data.count}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                corrBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--color-text-dark);">No location correlations computed.</td></tr>';
+            }
+
+            // Predictive Forecast
+            const predContainer = document.getElementById('predictiveForecast');
+            predContainer.innerHTML = '';
+            if (report.predictive) {
+                const hotspots = report.predictive.futureHotspots && report.predictive.futureHotspots.length > 0
+                    ? report.predictive.futureHotspots.map(([l, score]) => `<strong>${l}</strong> (strength: ${score})`).join(', ')
+                    : 'None';
+                predContainer.innerHTML = `
+                    <p style="margin-bottom: 12px;">🔮 **Estimated Hotspot Forecast**: ${hotspots}</p>
+                    <p style="margin-bottom: 12px;">📊 **Estimated Activity Momentum**: ${report.predictive.activityMomentum || 'Stable'}</p>
+                    <p style="color: var(--color-text-muted);">Predictive models are calculated from temporal modifications and spatial coordinate occurrences.</p>
+                `;
+            }
+
+            // 3. Prescriptive Alerts
+            const alertsContainer = document.getElementById('integrityAlertsContainer');
+            alertsContainer.innerHTML = '';
+            let alertCount = 0;
+
+            if (report.prescriptive.metadataAlerts && report.prescriptive.metadataAlerts.length > 0) {
+                report.prescriptive.metadataAlerts.forEach(alert => {
+                    alertCount++;
+                    const severityClass = alert.severity === 'critical' ? 'critical' : 'warning';
+                    alertsContainer.innerHTML += `
+                        <div class="alert-box ${severityClass}">
+                            <div>
+                                <div class="alert-title">${alert.file}</div>
+                                <div class="alert-desc">${alert.recommendation}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            if (alertCount === 0) {
+                alertsContainer.innerHTML = '<div style="color: var(--color-success); font-weight:600;">✅ Integrity check complete. All files contain valid timestamp & coordinate metadata.</div>';
+            }
+
+            // Prescriptive structure recommendation
+            const recContainer = document.getElementById('structureRecommendations');
+            recContainer.innerHTML = '';
+            if (report.prescriptive.restructureGuide && report.prescriptive.restructureGuide.length > 0) {
+                report.prescriptive.restructureGuide.forEach(guide => {
+                    recContainer.innerHTML += `<p style="margin-bottom: 10px;">📂 **Topic: ${guide.topic}** &rarr; Move associated files into directory: \`${guide.targetFolder}\`</p>`;
+                });
+            } else {
+                recContainer.innerHTML = '<p style="color: var(--color-success);">Directory layout is already optimized for topic groupings.</p>';
+            }
+
+            // Show active panel
+            switchTab(activeTab);
+        }
+
+        // Fetch database telemetry overview
+        async function loadTelemetry() {
+            try {
+                const response = await fetch('/api/telemetry');
+                const data = await response.json();
+
+                if (data.summary) {
+                    document.getElementById('telemetryVelocity').innerText = data.summary.cycle_velocity != null ? `${data.summary.cycle_velocity}h` : '-';
+                    document.getElementById('telemetryChurn').innerText = data.summary.churn_ratio != null ? data.summary.churn_ratio.toFixed(2) : '-';
+                    document.getElementById('telemetrySuccess').innerText = data.summary.success_frequency != null ? `${(data.summary.success_frequency * 100).toFixed(0)}%` : '-';
+                }
+
+                // Render alerts
+                const alertsBody = document.getElementById('telemetryAlertsBody');
+                alertsBody.innerHTML = '';
+                if (data.alerts && data.alerts.length > 0) {
+                    data.alerts.forEach(alert => {
+                        const date = new Date(alert.created_at).toLocaleString();
+                        alertsBody.innerHTML += `
+                            <tr>
+                                <td style="color: var(--color-warning); font-weight:600;">${alert.type}</td>
+                                <td>${alert.message}</td>
+                                <td style="font-family:monospace; font-size:11px;">${date}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    alertsBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--color-text-dark);">No telemetry alerts recorded.</td></tr>';
+                }
+
+                // Render events
+                const eventsBody = document.getElementById('telemetryEventsBody');
+                eventsBody.innerHTML = '';
+                if (data.events && data.events.length > 0) {
+                    data.events.forEach(evt => {
+                        const date = new Date(evt.created_at).toLocaleString();
+                        eventsBody.innerHTML += `
+                            <tr>
+                                <td style="color: var(--color-secondary); font-weight:600;">${evt.event_type}</td>
+                                <td style="font-family:monospace; font-size:11px;">${evt.parsed_metrics || '{}'}</td>
+                                <td style="font-family:monospace; font-size:11px;">${date}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    eventsBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--color-text-dark);">No telemetry events ingested.</td></tr>';
+                }
+            } catch (err) {
+                console.error('Failed to load telemetry stats from database.', err);
+            }
+        }
+    </script>
+</body>
+</html>

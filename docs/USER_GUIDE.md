@@ -15,7 +15,9 @@ Before installing the bot, ensure your system has the following dependencies ins
 
 ### Option 1: Automated Installation (Recommended for Windows)
 
-Open Windows PowerShell and run the following command to automatically verify/install Node.js and pull all required dependencies:
+Simply double-click the **`install.bat`** file at the root of the project directory.
+
+Alternatively, open Windows PowerShell and run the following command to automatically verify/install Node.js and pull all required dependencies:
 
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force; .\setup.ps1
@@ -37,6 +39,19 @@ npm install
 ```
 
 ## Running the Bot
+
+### Option 1: Visual Web GUI (Recommended)
+
+1. Double-click the **`gui.bat`** file in the root folder, or run `npm run gui` in your terminal.
+2. The bot will automatically spin up a local web server and launch your default browser to `http://localhost:3000`.
+3. Use the **Folder Explorer** panel on the left to select any local directory, and click **Analyze Folder** to see detailed visual statistics.
+
+### Option 2: 1-Click Drag-and-Drop Runner
+
+- **Drag-and-Drop**: Simply drag the folder you want to analyze and drop it directly onto the **`run.bat`** file in Windows Explorer.
+- **Double-click**: Double-click **`run.bat`** and paste the folder path when prompted.
+
+### Option 3: Command Line Interface (CLI)
 
 The CLI requires a target directory to scan. You pass this path as an argument after the `--` flag.
 
