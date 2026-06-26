@@ -15,20 +15,21 @@ The repository currently ships a Node.js CLI-centered analytics flow:
 
 ## Current Runtime Boundaries
 
-Implemented today:
+Implemented in the active system:
 
-- recursive read-only ingestion for `.txt`, `.md`, `.json`, `.csv`, and `.log`
-- multithreaded parsing with fingerprint-based cache reuse for compatible ingestions
-- tokenization plus lightweight date/location extraction
+- recursive read-only ingestion for `.txt`, `.md`, `.json`, `.csv`, `.log`, `.pdf`, `.png`, `.jpg`, and `.jpeg`
+- multithreaded worker pool (`node:worker_threads`) with fingerprint-based memoization cache (`.analytics_cache.json`)
+- PDF text extraction via `pdf-parse` with automatic OCR fallback (MuPDF + Tesseract) for rasterized/corrupted documents
+- image OCR via `tesseract.js` for `.png`/`.jpg`/`.jpeg` files
+- Named Entity Recognition (NER) for dates and locations via the `compromise` NLP library, with regex fallback for structured fields
+- TF-IDF weighting and Cosine Similarity cross-linking in the diagnostic tier (`src/analytics/diagnostic.js`)
+- weighted moving average forecasting with empty-interval fill in the predictive tier (`src/analytics/predictive.js`)
 - descriptive, diagnostic, predictive, and prescriptive analytics modules
-- JSON, Markdown, and CSV report delivery through the Node CLI
-- directory watch mode that re-runs the pipeline after file changes
-
-Not yet implemented in the active system:
-
-- binary or multimedia extraction
-- Named Entity Recognition (NER)
-- dashboard or background scheduling
+- JSON, Markdown, and CSV report delivery through the Node CLI (`--format=md`, `--format=csv`)
+- directory watch mode via `chokidar` (`--watch`) that re-runs the pipeline after file changes
+- `--workers=<n>` and `--clear-cache` CLI flags
+- local web GUI (`src/gui/server.js`) for browser-based directory browsing and analysis
+- telemetry pipeline (`src/telemetry/`) for GitHub webhook ingestion, drift detection, and subagent handoff simulation
 
 ## Planned Expansion
 

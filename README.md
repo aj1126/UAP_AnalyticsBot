@@ -9,6 +9,7 @@
 
 ## Table of Contents
 
+- [Quick Start](#quick-start)
 - [Core Loop: Ingest -> Analyze -> Report](#core-loop-ingest---analyze---report)
 - [Analytics Scope](#analytics-scope)
 - [Core Features](#core-features)
@@ -36,6 +37,20 @@
   - [2. Algorithmic Depth (Diagnostic Tier)](#2-algorithmic-depth-diagnostic-tier)
   - [3. Data Integrity & NLP](#3-data-integrity-nlp)
   - [4. Predictive & Prescriptive Enhancements](#4-predictive-prescriptive-enhancements)
+
+[↑ Back to Top](#uap-analyticsbot)
+
+
+## Quick Start
+
+Get the pipeline running in four commands. For full installation options and output formats, see the [User Guide](docs/USER_GUIDE.md).
+
+```bash
+git clone https://github.com/aj1126/UAP_AnalyticsBot.git
+cd UAP_AnalyticsBot
+npm install
+npm start -- /path/to/your/documents --format=md
+```
 
 [↑ Back to Top](#uap-analyticsbot)
 
