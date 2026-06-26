@@ -9,11 +9,23 @@ const path = require('node:path');
 const { exec } = require('child_process');
 
 const { generateAnalyticsReport } = require('../pipeline');
+const { ingestDirectory } = require('../ingestion/file-ingestion');
+const { analyzeFiles } = require('../analytics/analyzer');
+const { buildDescriptiveAnalytics } = require('../analytics/descriptive');
+const { buildDiagnosticAnalytics } = require('../analytics/diagnostic');
+const { buildPredictiveAnalytics } = require('../analytics/predictive');
+const { buildPrescriptiveAnalytics } = require('../analytics/prescriptive');
 const db = require('../telemetry/db');
+const datapoolDb = require('../datapools/datapool-db');
 
 // Ensure database tables are initialized
 try {
     db.initDb();
+} catch (e) {
+    // Non-blocking fallback for environment scenarios
+}
+try {
+    datapoolDb.initDb();
 } catch (e) {
     // Non-blocking fallback for environment scenarios
 }
@@ -197,6 +209,167 @@ const server = http.createServer((req, res) => {
             res.end(JSON.stringify(overview));
         } catch (err) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message }));
+        }
+        return;
+    }
+
+    // Route: API List Ingestions
+    if (pathname === '/api/ingestions' && req.method === 'GET') {
+        try {
+            const list = datapoolDb.getIngestionsList();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(list));
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message }));
+        }
+        return;
+    }
+
+    // Route: API Create Ingestion (Ingest folder & Save snapshot)
+    if (pathname === '/api/ingestions' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', async () => {
+            try {
+                const payload = JSON.parse(body);
+                if (!payload.name || !payload.path) {
+                    throw new Error("Missing 'name' or 'path' in request body.");
+                }
+                const ingestionResult = await ingestDirectory(payload.path);
+                const ingestionId = datapoolDb.saveIngestion(payload.name, ingestionResult.sourceDirectory, ingestionResult.files);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, id: ingestionId }));
+            } catch (err) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: err.message }));
+            }
+        });
+        return;
+    }
+
+    // Route: API Delete Ingestion
+    if (pathname.startsWith('/api/ingestions/') && req.method === 'DELETE') {
+        try {
+            const id = pathname.split('/').pop();
+            datapoolDb.deleteIngestion(id);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true }));
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message }));
+        }
+        return;
+    }
+
+    // Route: API List Data Pools
+    if (pathname === '/api/datapools' && req.method === 'GET') {
+        try {
+            const list = datapoolDb.getDataPoolsList();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(list));
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message }));
+        }
+        return;
+    }
+
+    // Route: API Create Data Pool
+    if (pathname === '/api/datapools' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', async () => {
+            try {
+                const payload = JSON.parse(body);
+                if (!payload.name) {
+                    throw new Error("Missing 'name' in request body.");
+                }
+                const poolId = datapoolDb.createDataPool(payload.name, payload.description);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, id: poolId }));
+            } catch (err) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: err.message }));
+            }
+        });
+        return;
+    }
+
+    // Route: API Delete Data Pool
+    if (pathname.startsWith('/api/datapools/') && req.method === 'DELETE' && !pathname.includes('/ingestions') && !pathname.includes('/analyze')) {
+        try {
+            const id = pathname.split('/').pop();
+            datapoolDb.deleteDataPool(id);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true }));
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message }));
+        }
+        return;
+    }
+
+    // Route: API Link Ingestion to Data Pool
+    if (pathname.startsWith('/api/datapools/') && pathname.endsWith('/ingestions') && req.method === 'POST') {
+        const poolId = pathname.split('/')[3];
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', async () => {
+            try {
+                const payload = JSON.parse(body);
+                if (!payload.ingestionId) {
+                    throw new Error("Missing 'ingestionId' in request body.");
+                }
+                datapoolDb.linkIngestionToPool(poolId, payload.ingestionId);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true }));
+            } catch (err) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: err.message }));
+            }
+        });
+        return;
+    }
+
+    // Route: API Unlink Ingestion from Data Pool
+    if (pathname.startsWith('/api/datapools/') && pathname.includes('/ingestions/') && req.method === 'DELETE') {
+        try {
+            const parts = pathname.split('/');
+            const poolId = parts[3];
+            const ingestionId = parts.pop();
+            datapoolDb.unlinkIngestionFromPool(poolId, ingestionId);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true }));
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message }));
+        }
+        return;
+    }
+
+    // Route: API Analyze Data Pool
+    if (pathname.startsWith('/api/datapools/') && pathname.endsWith('/analyze') && req.method === 'GET') {
+        try {
+            const poolId = pathname.split('/')[3];
+            const files = datapoolDb.getFilesInPool(poolId);
+            if (files.length === 0) {
+                throw new Error("No files linked in this data pool. Link at least one saved ingestion containing files first.");
+            }
+            const analyzedFiles = analyzeFiles(files);
+            const descriptive = buildDescriptiveAnalytics(analyzedFiles);
+            const report = {
+                sourceDirectory: `Data Pool: ${poolId}`,
+                descriptive,
+                diagnostic: buildDiagnosticAnalytics(analyzedFiles),
+                predictive: buildPredictiveAnalytics(analyzedFiles),
+                prescriptive: buildPrescriptiveAnalytics(analyzedFiles, descriptive)
+            };
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(report));
+        } catch (err) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: err.message }));
         }
         return;

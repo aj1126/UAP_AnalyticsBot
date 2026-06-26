@@ -2,6 +2,13 @@ const path = require("node:path");
 const { parentPort } = require("node:worker_threads");
 const fsp = require("node:fs/promises");
 
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Worker Unhandled Rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('Worker Uncaught Exception:', err);
+});
+
 const TEXT_EXTENSIONS = new Set([".txt", ".md", ".json", ".csv", ".log"]);
 const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg"]);
 const SUPPORTED_EXTENSIONS = new Set([
@@ -11,9 +18,6 @@ const SUPPORTED_EXTENSIONS = new Set([
 ]);
 
 parentPort.on("message", async (task) => {
-    if (task.action === "close") {
-        process.exit(0);
-    }
     try {
         const extension = path.extname(task.filePath).toLowerCase();
         if (!SUPPORTED_EXTENSIONS.has(extension)) {
@@ -45,17 +49,27 @@ parentPort.on("message", async (task) => {
                 const path = require('path');
                 const fsp = require('fs/promises');
 
-                const standardFontsPath = path.join(path.dirname(require.resolve('pdf-parse')), '../pdfjs-dist/standard_fonts/');
+                let standardFontsPath;
+                try {
+                    standardFontsPath = path.join(path.dirname(require.resolve('pdfjs-dist/package.json')), 'standard_fonts/');
+                } catch {
+                    standardFontsPath = path.join(process.cwd(), 'node_modules/pdfjs-dist/standard_fonts/');
+                }
+                standardFontsPath = standardFontsPath.replace(/\\/g, '/');
+                if (!standardFontsPath.endsWith('/')) {
+                    standardFontsPath += '/';
+                }
 
                 const dataBuffer = await fsp.readFile(task.filePath);
                 const wasmData = new Uint8Array(dataBuffer.buffer, dataBuffer.byteOffset, dataBuffer.byteLength);
                 
                 const options = { 
+                    data: wasmData,
                     disableFontFace: false,
                     standardFontDataUrl: standardFontsPath
                 };
 
-                const parserInstance = new pdfParseModule.PDFParse(wasmData, options);
+                const parserInstance = new pdfParseModule.PDFParse(options);
                 try {
                     const parsedResult = await parserInstance.getText({ pageJoiner: '\n' }); 
                     const textResult = parsedResult?.text || '';

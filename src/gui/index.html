@@ -505,6 +505,149 @@
             color: var(--color-secondary);
             margin-bottom: 4px;
         }
+
+        /* Data Pools Styles */
+        .datapools-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 16px;
+        }
+        .form-section {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+        .form-section h3 {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-text-main);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-muted);
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: var(--color-text-main);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            border-color: var(--color-secondary);
+            box-shadow: 0 0 8px rgba(6, 182, 212, 0.25);
+        }
+        .item-list {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .item-card {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border-color 0.2s;
+        }
+        .item-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .item-name {
+            font-weight: 600;
+            color: var(--color-text-main);
+            font-size: 15px;
+        }
+        .item-meta {
+            font-size: 12px;
+            color: var(--color-text-muted);
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .action-btn.delete {
+            color: var(--color-error);
+        }
+        .action-btn.delete:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+        .action-btn.analyze {
+            color: var(--color-secondary);
+        }
+        .action-btn.analyze:hover {
+            background-color: rgba(6, 182, 212, 0.1);
+        }
+        .pool-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .link-badge {
+            background-color: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--color-text-main);
+        }
+        .link-badge button {
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            padding: 0;
+            font-size: 10px;
+            display: inline-flex;
+            align-items: center;
+            line-height: 1;
+        }
+        .link-badge button:hover {
+            color: var(--color-error);
+        }
     </style>
 </head>
 <body>
@@ -551,6 +694,7 @@
             <button class="tab-btn" onclick="switchTab('diagnostic')">Diagnostic & Predictive</button>
             <button class="tab-btn" onclick="switchTab('prescriptive')">Prescriptive Actions</button>
             <button class="tab-btn" onclick="switchTab('telemetry')">Repository Telemetry</button>
+            <button class="tab-btn" onclick="switchTab('datapools')">Data Pools & Ingestions</button>
         </nav>
 
         <!-- Loading View -->
@@ -710,6 +854,64 @@
                 </table>
             </div>
         </section>
+
+        <!-- TAB: Data Pools & Ingestions -->
+        <section id="datapoolsPanel" class="tab-panel" style="display: none;">
+            <div class="datapools-container">
+                <!-- Left Column: Ingestions -->
+                <div class="form-section">
+                    <h3>
+                        <span>Saved Ingestions</span>
+                        <span style="font-size: 11px; font-weight: normal; color: var(--color-text-muted);">Snapshots of folder directories</span>
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label for="ingestionName">Custom Ingestion Name (Optional)</label>
+                        <input type="text" id="ingestionName" placeholder="Defaults to folderName_YYYY-MM-DD" />
+                    </div>
+                    <div class="form-group">
+                        <label>Target Ingestion Folder</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="ingestionPath" readonly placeholder="Select a folder in explorer sidebar..." style="flex-grow: 1;" />
+                            <button class="btn" onclick="saveNewIngestion()">Save Snapshot</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px;">
+                        <h4 style="font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--color-text-main); margin-bottom: 12px;">Saved Snapshots</h4>
+                        <div id="ingestionsList" class="item-list">
+                            <!-- Ingestion items load here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Data Pools -->
+                <div class="form-section">
+                    <h3>
+                        <span>Data Pools</span>
+                        <span style="font-size: 11px; font-weight: normal; color: var(--color-text-muted);">Aggregations for multi-tier analysis</span>
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label for="poolName">Data Pool Name</label>
+                        <input type="text" id="poolName" placeholder="e.g. UAP Test Pool" />
+                    </div>
+                    <div class="form-group">
+                        <label for="poolDescription">Description</label>
+                        <textarea id="poolDescription" rows="2" placeholder="e.g. Combined analysis of all sightings under region West"></textarea>
+                    </div>
+                    <button class="btn" style="width: 100%;" onclick="createNewPool()">Create Data Pool</button>
+
+                    <div style="margin-top: 24px;">
+                        <h4 style="font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--color-text-main); margin-bottom: 12px;">Active Pools</h4>
+                        <div id="datapoolsList" class="item-list">
+                            <!-- Pool cards load here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
     </main>
 
     <!-- Client-Side GUI Logic -->
@@ -754,6 +956,8 @@
             // Special reload for Telemetry dashboard
             if (tabId === 'telemetry') {
                 loadTelemetry();
+            } else if (tabId === 'datapools') {
+                loadIngestions();
             }
         }
 
@@ -772,6 +976,10 @@
                 currentPath = data.currentPath;
                 document.getElementById('pathInput').value = currentPath;
                 document.getElementById('titlePath').innerText = currentPath;
+                const ingestionPathInput = document.getElementById('ingestionPath');
+                if (ingestionPathInput) {
+                    ingestionPathInput.value = currentPath;
+                }
 
                 const list = document.getElementById('explorerList');
                 list.innerHTML = '';
@@ -1002,6 +1210,296 @@
                 }
             } catch (err) {
                 console.error('Failed to load telemetry stats from database.', err);
+            }
+        }
+
+        // ==========================================
+        // Data Pools & Saved Ingestions GUI Functions
+        // ==========================================
+        let savedIngestionsList = [];
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        async function loadIngestions() {
+            try {
+                const response = await fetch('/api/ingestions');
+                const data = await response.json();
+                savedIngestionsList = Array.isArray(data) ? data : [];
+                
+                const listEl = document.getElementById('ingestionsList');
+                listEl.innerHTML = '';
+                
+                if (savedIngestionsList.length === 0) {
+                    listEl.innerHTML = '<div style="color: var(--color-text-muted); font-size: 13px;">No snapshots saved yet.</div>';
+                } else {
+                    savedIngestionsList.forEach(ing => {
+                        const dateStr = new Date(ing.ingested_at).toLocaleString();
+                        listEl.innerHTML += `
+                            <div class="item-card">
+                                <div class="item-header">
+                                    <span class="item-name">${escapeHtml(ing.name)}</span>
+                                    <button class="action-btn delete" title="Delete Snapshot" onclick="deleteIngestion(${ing.id})">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                                <div class="item-meta">
+                                    📁 Dir: <span style="font-family: monospace; font-size: 11px;">${escapeHtml(ing.source_directory)}</span>
+                                </div>
+                                <div class="item-meta" style="display: flex; justify-content: space-between;">
+                                    <span>📄 ${ing.fileCount} files</span>
+                                    <span>🕒 ${dateStr}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Refresh data pools list (which rebuilds their link dropdowns)
+                await loadDataPools();
+            } catch (err) {
+                console.error('Failed to load ingestions:', err);
+            }
+        }
+
+        async function saveNewIngestion() {
+            const pathVal = document.getElementById('ingestionPath').value || currentPath;
+            if (!pathVal) {
+                alert("Please select a target directory in the Folder Explorer sidebar first.");
+                return;
+            }
+            const nameVal = document.getElementById('ingestionName').value.trim();
+            
+            // Generate a default name if empty: folderName_YYYY-MM-DD
+            let finalName = nameVal;
+            if (!finalName) {
+                const pathParts = pathVal.split(/[/\\]/);
+                const folderName = pathParts[pathParts.length - 1] || 'Ingestion';
+                const dateStr = new Date().toISOString().split('T')[0];
+                finalName = `${folderName}_${dateStr}`;
+            }
+            
+            const loader = document.getElementById('loader');
+            loader.style.display = 'flex';
+            
+            try {
+                const response = await fetch('/api/ingestions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: finalName, path: pathVal })
+                });
+                const result = await response.json();
+                loader.style.display = 'none';
+                if (result.error) {
+                    alert(`Ingestion failed: ${result.error}`);
+                } else {
+                    document.getElementById('ingestionName').value = '';
+                    loadIngestions();
+                }
+            } catch (err) {
+                loader.style.display = 'none';
+                alert(`Error during ingestion: ${err.message}`);
+            }
+        }
+
+        async function deleteIngestion(id) {
+            if (!confirm("Are you sure you want to delete this saved ingestion snapshot? This will also remove it from any data pools.")) return;
+            try {
+                const response = await fetch(`/api/ingestions/${id}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (result.error) {
+                    alert(`Error: ${result.error}`);
+                } else {
+                    loadIngestions();
+                }
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        async function createNewPool() {
+            const nameVal = document.getElementById('poolName').value.trim();
+            const descVal = document.getElementById('poolDescription').value.trim();
+            if (!nameVal) {
+                alert("Please enter a name for the Data Pool.");
+                return;
+            }
+            try {
+                const response = await fetch('/api/datapools', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: nameVal, description: descVal })
+                });
+                const result = await response.json();
+                if (result.error) {
+                    alert(`Failed to create pool: ${result.error}`);
+                } else {
+                    document.getElementById('poolName').value = '';
+                    document.getElementById('poolDescription').value = '';
+                    loadDataPools();
+                }
+            } catch (err) {
+                alert(`Error creating pool: ${err.message}`);
+            }
+        }
+
+        async function loadDataPools() {
+            try {
+                const response = await fetch('/api/datapools');
+                const data = await response.json();
+                const listEl = document.getElementById('datapoolsList');
+                listEl.innerHTML = '';
+                
+                const pools = Array.isArray(data) ? data : [];
+                if (pools.length === 0) {
+                    listEl.innerHTML = '<div style="color: var(--color-text-muted); font-size: 13px;">No data pools created yet.</div>';
+                    return;
+                }
+                
+                pools.forEach(pool => {
+                    // Build options for dropdown of unlinked ingestions
+                    const linkedIds = new Set(pool.ingestions.map(i => i.id));
+                    const unlinked = savedIngestionsList.filter(ing => !linkedIds.has(ing.id));
+                    
+                    let optionsMarkup = '<option value="">-- Select Ingestion to Link --</option>';
+                    unlinked.forEach(ing => {
+                        optionsMarkup += `<option value="${ing.id}">${escapeHtml(ing.name)} (${ing.fileCount} files)</option>`;
+                    });
+                    
+                    // Build badges for linked ingestions
+                    let linksMarkup = '';
+                    if (pool.ingestions.length === 0) {
+                        linksMarkup = '<span style="color: var(--color-text-muted); font-size: 12px; font-style: italic;">No snapshots linked.</span>';
+                    } else {
+                        pool.ingestions.forEach(ing => {
+                            linksMarkup += `
+                                <span class="link-badge">
+                                    <span>${escapeHtml(ing.name)} (${ing.fileCount} f)</span>
+                                    <button onclick="unlinkIngestion(${pool.id}, ${ing.id})" title="Unlink Snapshot">&times;</button>
+                                </span>
+                            `;
+                        });
+                    }
+                    
+                    listEl.innerHTML += `
+                        <div class="item-card">
+                            <div class="item-header">
+                                <span class="item-name">${escapeHtml(pool.name)}</span>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="action-btn analyze" title="Analyze Data Pool" onclick="analyzePool(${pool.id})">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 15.3a6 6 0 1 0-8.4-8.4 6 6 0 0 0 8.4 8.4Zm0 0 6 6"/></svg>
+                                    </button>
+                                    <button class="action-btn delete" title="Delete Data Pool" onclick="deletePool(${pool.id})">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            ${pool.description ? `<p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 4px;">${escapeHtml(pool.description)}</p>` : ''}
+                            <div class="pool-links">
+                                ${linksMarkup}
+                            </div>
+                            <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center;">
+                                <select id="linkSelect_${pool.id}" style="padding: 6px 10px; font-size: 12px; height: 32px;" onchange="linkIngestion(${pool.id}, this.value)">
+                                    ${optionsMarkup}
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error('Failed to load data pools:', err);
+            }
+        }
+
+        async function deletePool(id) {
+            if (!confirm("Are you sure you want to delete this Data Pool? Linked snapshots will not be deleted.")) return;
+            try {
+                const response = await fetch(`/api/datapools/${id}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (result.error) {
+                    alert(`Error: ${result.error}`);
+                } else {
+                    loadDataPools();
+                }
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        async function linkIngestion(poolId, ingestionId) {
+            if (!ingestionId) return;
+            try {
+                const response = await fetch(`/api/datapools/${poolId}/ingestions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ingestionId: parseInt(ingestionId, 10) })
+                });
+                const result = await response.json();
+                if (result.error) {
+                    alert(`Error: ${result.error}`);
+                } else {
+                    loadDataPools();
+                }
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        async function unlinkIngestion(poolId, ingestionId) {
+            try {
+                const response = await fetch(`/api/datapools/${poolId}/ingestions/${ingestionId}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.error) {
+                    alert(`Error: ${result.error}`);
+                } else {
+                    loadDataPools();
+                }
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        async function analyzePool(poolId) {
+            const loader = document.getElementById('loader');
+            const empty = document.getElementById('emptyState');
+            const panels = document.querySelectorAll('.tab-panel');
+
+            loader.style.display = 'flex';
+            empty.style.display = 'none';
+            panels.forEach(p => p.style.display = 'none');
+
+            try {
+                const response = await fetch(`/api/datapools/${poolId}/analyze`);
+                const report = await response.json();
+                loader.style.display = 'none';
+
+                if (report.error) {
+                    alert(`Data Pool Analysis Failed: ${report.error}`);
+                    switchTab('datapools');
+                    return;
+                }
+
+                // Render in descriptive dashboard
+                renderAnalytics(report);
+                
+                // Highlight descriptive tab and render panels
+                switchTab('descriptive');
+                
+                // Set path title to the analysis target name
+                document.getElementById('titlePath').innerText = `Data Pool Analysis (ID: ${poolId})`;
+            } catch (err) {
+                loader.style.display = 'none';
+                switchTab('datapools');
+                alert(`Data Pool Analysis Connection Error: ${err.message}`);
             }
         }
     </script>

@@ -59,7 +59,9 @@ startxref
     await fs.writeFile(path.join(fixtureRoot, 'sighting-pdf.pdf'), minimalPdf, 'utf-8');
 
     try {
+        console.log("Starting generateAnalyticsReport on:", fixtureRoot);
         const report = await generateAnalyticsReport(fixtureRoot, { clearCache: true, workers: 2 });
+        console.log("Report generation finished! Report:", JSON.stringify(report, null, 2));
         if (report.descriptive.fileCount !== 2) {
             throw new Error(`Expected 2 files ingested, found: ${report.descriptive.fileCount}`);
         }

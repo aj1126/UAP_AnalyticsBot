@@ -102,14 +102,15 @@ async function ingestDirectory(rootDirectory, options = {}) {
 
                     worker.on("error", (err) => {
                         process.stderr.write(`\n⚠️ Fatal Worker Crash: ${err.message}\n`);
-                        worker.terminate().then(resolve);
+                        setImmediate(() => {
+                            worker.terminate().then(resolve);
+                        });
                     });
 
                     function assignNextTask() {
                         if (currentIndex >= pathsToProcess.length) {
-                            worker.postMessage({ action: "close" });
-                            worker.on("exit", () => {
-                                resolve();
+                            setImmediate(() => {
+                                worker.terminate().then(resolve);
                             });
                             return;
                         }
