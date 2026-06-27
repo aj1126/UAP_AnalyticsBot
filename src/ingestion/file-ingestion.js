@@ -1,138 +1,129 @@
-const path = require("node:path");
-const os = require("node:os");
-const { promises: fsp } = require("node:fs");
-const { Worker } = require("node:worker_threads");
+const { Worker } = require('node:worker_threads');
+const path = require('node:path');
+const fs = require('node:fs/promises');
+const crypto = require('node:crypto');
 
-const CACHE_SCHEMA_VERSION = 1;
+const CACHE_FILE = '.analytics_cache.json';
 
-function parseCacheEntries(cacheData) {
-    const parsedCache = JSON.parse(cacheData);
-
-    if (
-        parsedCache &&
-        typeof parsedCache === 'object' &&
-        parsedCache.version === CACHE_SCHEMA_VERSION &&
-        parsedCache.entries &&
-        typeof parsedCache.entries === 'object' &&
-        !Array.isArray(parsedCache.entries)
-    ) {
-        return parsedCache.entries;
+async function loadCache(rootDir) {
+    try {
+        const cachePath = path.join(rootDir, CACHE_FILE);
+        const data = await fs.readFile(cachePath, 'utf-8');
+        return JSON.parse(data);
+    } catch {
+        return Object.create(null);
     }
-
-    return {};
 }
 
-async function* walkFiles(rootDirectory) {
-    const directoryEntries = await fsp.readdir(rootDirectory, { withFileTypes: true });
+async function saveCache(rootDir, cache) {
+    try {
+        const cachePath = path.join(rootDir, CACHE_FILE);
+        await fs.writeFile(cachePath, JSON.stringify(cache, null, 2), 'utf-8');
+    } catch {
+        // Fallback silently if the directory is read-only
+    }
+}
 
-    for (const entry of directoryEntries) {
-        const absolutePath = path.join(rootDirectory, entry.name);
-        if (entry.isSymbolicLink()) {
-            continue; // Skip symlinks to prevent traversal outside the source directory
-        } else if (entry.isDirectory()) {
-            yield* walkFiles(absolutePath);
-        } else if (entry.isFile()) {
-            yield absolutePath;
+async function walkFiles(dir, fileList = []) {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            if (entry.name !== 'data_exports' && entry.name !== '.git') {
+                await walkFiles(fullPath, fileList);
+            }
+        } else {
+            const ext = path.extname(entry.name).toLowerCase();
+            if (['.txt', '.md', '.pdf', '.png', '.jpg', '.jpeg'].includes(ext)) {
+                fileList.push(fullPath);
+            }
         }
     }
+    return fileList;
 }
 
-async function ingestDirectory(rootDirectory, options = {}) {
-    const sourceDirectory = path.resolve(rootDirectory);
-    const files = [];
-    const pathsToProcess = [];
-
-    // State Caching (Memoization)
-    const cachePath = path.join(process.cwd(), '.analytics_cache.json');
-    let cache = {};
-    if (!options.clearCache) {
+async function ingestDirectory(sourceDirectory, options = {}) {
+    const numWorkers = options.workers || 1;
+    if (options.clearCache) {
         try {
-            const cacheData = await fsp.readFile(cachePath, 'utf-8');
-            cache = parseCacheEntries(cacheData);
-        } catch (err) {
-            cache = {};
-        }
+            await fs.unlink(path.join(sourceDirectory, CACHE_FILE));
+        } catch {}
     }
 
-    const visitedPaths = new Set();
-    for await (const filePath of walkFiles(sourceDirectory)) {
-        visitedPaths.add(filePath);
-        const stats = await fsp.stat(filePath);
-        const fingerprint = `${stats.size}-${stats.mtimeMs}`; // Size + Modified Time
-        
-        if (cache[filePath] && cache[filePath].fingerprint === fingerprint) {
-            files.push(cache[filePath].data); // Short-circuit bypass
+    const cache = await loadCache(sourceDirectory);
+    const allFilePaths = await walkFiles(sourceDirectory);
+    
+    const pathsToProcess = [];
+    const finalFiles = [];
+
+    for (const filePath of allFilePaths) {
+        const stat = await fs.stat(filePath);
+        const fingerprint = crypto
+            .createHash('md5')
+            .update(`${filePath}:${stat.mtimeMs}:${stat.size}`)
+            .digest('hex');
+
+        if (cache[fingerprint]) {
+            finalFiles.push(cache[fingerprint]);
         } else {
             pathsToProcess.push({ filePath, fingerprint });
         }
     }
 
-    // Evict stale cache keys scoped to this sourceDirectory
-    for (const key of Object.keys(cache)) {
-        if (
-            (key === sourceDirectory || key.startsWith(sourceDirectory + path.sep)) &&
-            !visitedPaths.has(key)
-        ) {
-            delete cache[key];
+    if (pathsToProcess.length === 0) {
+        return { sourceDirectory, files: finalFiles };
+    }
+
+    const actualWorkers = Math.min(numWorkers, pathsToProcess.length);
+    let currentIndex = 0;
+
+    await new Promise((resolve) => {
+        let completedWorkers = 0;
+
+        for (let i = 0; i < actualWorkers; i++) {
+            const worker = new Worker(path.join(__dirname, 'worker.js'));
+
+            worker.on('message', (msg) => {
+                if (msg.success && msg.fileData) {
+                    finalFiles.push(msg.fileData);
+                    cache[msg.fingerprint] = msg.fileData;
+                }
+                assignNextTask(worker);
+            });
+
+            worker.on('error', () => {
+                assignNextTask(worker);
+            });
+
+            worker.on('exit', () => {
+                completedWorkers++;
+                if (completedWorkers === actualWorkers) {
+                    resolve();
+                }
+            });
+
+            assignNextTask(worker);
         }
-    }
 
-    const maxCores = options.workers || Math.max(1, os.cpus().length - 1);
-    const numWorkers = Math.min(pathsToProcess.length, maxCores);
-    
-    if (numWorkers > 0) {
-        process.stdout.write(`\n🚀 Initializing WebAssembly Worker Pool (${numWorkers} threads)...\n`);
+        function assignNextTask(worker) {
+            if (currentIndex >= pathsToProcess.length) {
+                // Send a close message so the worker shuts down gracefully after its event loop empties
+                worker.postMessage({ action: 'close' });
+                return;
+            }
+            const task = pathsToProcess[currentIndex++];
+            worker.postMessage({
+                filePath: task.filePath,
+                fingerprint: task.fingerprint,
+                rootDirectory: sourceDirectory
+            });
+        }
+    });
 
-        let currentIndex = 0;
-
-        await Promise.all(
-            Array.from({ length: numWorkers }).map(() => {
-                return new Promise((resolve) => {
-                    const worker = new Worker(path.join(__dirname, "worker.js"));
-
-                    worker.on("message", (msg) => {
-                        if (msg.success && msg.result) {
-                            files.push(msg.result);
-                            cache[msg.filePath] = { fingerprint: msg.fingerprint, data: msg.result };
-                        } else if (!msg.success) {
-                            process.stderr.write(`\n⚠️ File failed (${msg.filePath}): ${msg.error}\n`);
-                        }
-                        assignNextTask();
-                    });
-
-                    worker.on("error", (err) => {
-                        process.stderr.write(`\n⚠️ Fatal Worker Crash: ${err.message}\n`);
-                        setImmediate(() => {
-                            worker.terminate().then(resolve);
-                        });
-                    });
-
-                    function assignNextTask() {
-                        if (currentIndex >= pathsToProcess.length) {
-                            setImmediate(() => {
-                                worker.terminate().then(resolve);
-                            });
-                            return;
-                        }
-                        const task = pathsToProcess[currentIndex++];
-                        worker.postMessage({ filePath: task.filePath, fingerprint: task.fingerprint, rootDirectory: sourceDirectory });
-                    }
-
-                    assignNextTask();
-                });
-            })
-        );
-    }
-
-    // Save newly parsed data back to .analytics_cache.json
-    const tempCachePath = `${cachePath}.${process.pid}.${Date.now()}.tmp`;
-    await fsp.writeFile(
-        tempCachePath,
-        JSON.stringify({ version: CACHE_SCHEMA_VERSION, entries: cache }, null, 2)
-    );
-    await fsp.rename(tempCachePath, cachePath);
-
-    return { sourceDirectory, files };
+    await saveCache(sourceDirectory, cache);
+    return { sourceDirectory, files: finalFiles };
 }
 
-module.exports = { ingestDirectory };
+module.exports = {
+    ingestDirectory
+};

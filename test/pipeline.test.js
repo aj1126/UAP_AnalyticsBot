@@ -1,4 +1,13 @@
+// Ensure this block is at the top of test/pipeline.test.js
 const test = require('node:test');
+const { after } = require('node:test');
+
+after(async () => {
+    // Explicitly give the unmanaged WebAssembly memory space time to flush before process exit
+    await new Promise((resolve) => setTimeout(resolve, 500));
+});
+const test = require('node:test');
+const { after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const os = require('node:os');
@@ -7,6 +16,11 @@ const path = require('node:path');
 const { generateAnalyticsReport } = require('../src/pipeline');
 const { buildDiagnosticAnalytics } = require('../src/analytics/diagnostic');
 const { generateCsvReport } = require('../src/delivery/csv-generator');
+
+// Global synchronization macro guard to prevent WebAssembly unmanaged heap access violations on process exit
+after(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+});
 
 async function createFixtureDirectory() {
     const fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'uap-analytics-'));
@@ -40,7 +54,6 @@ test('generateAnalyticsReport builds all analytics tiers from text files', async
 
         assert.equal(report.descriptive.fileCount, 2);
         assert.deepEqual(report.descriptive.locations, ['Phoenix', 'Roswell']);
-        // FIXED: Correctly targets the nested descriptive dates array
         assert.deepEqual(report.descriptive.dates, ['2024-01-01', '2024-02-14']);
         assert.ok(report.descriptive.wordFrequency.location >= 2);
         assert.ok(report.diagnostic.wordUsageByLocation.Roswell.length > 0);
@@ -214,4 +227,4 @@ startxref
     } finally {
         await fs.rm(fixtureRoot, { recursive: true, force: true });
     }
-});
+});
