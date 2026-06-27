@@ -1,11 +1,3 @@
-// Ensure this block is at the top of test/pipeline.test.js
-const test = require('node:test');
-const { after } = require('node:test');
-
-after(async () => {
-    // Explicitly give the unmanaged WebAssembly memory space time to flush before process exit
-    await new Promise((resolve) => setTimeout(resolve, 500));
-});
 const test = require('node:test');
 const { after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -19,7 +11,8 @@ const { generateCsvReport } = require('../src/delivery/csv-generator');
 
 // Global synchronization macro guard to prevent WebAssembly unmanaged heap access violations on process exit
 after(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Explicitly give the unmanaged WebAssembly memory space time to flush before process exit
+    await new Promise((resolve) => setTimeout(resolve, 500));
 });
 
 async function createFixtureDirectory() {
