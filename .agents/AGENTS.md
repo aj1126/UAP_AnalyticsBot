@@ -29,3 +29,10 @@
   const parser = new PDFParse(wasmData, options);
   ```
 - **Cross-Platform Font Paths:** Always ensure that `standardFontDataUrl` uses forward slashes (`/`) and ends with a trailing `/` (even on Windows). Convert backslashes using `.replace(/\\/g, '/')` to ensure PDF.js can resolve and append font file names correctly.
+
+## Code Injection & Boilerplate Safety
+
+- **Avoid Redundant/Duplicate Declarations:** When prepending or injecting boilerplate blocks (such as WebAssembly memory teardowns, test runner imports, or setup/cleanup macros) into existing scripts or test files:
+  - Do not blindly prepend duplicate `require` or `import` blocks.
+  - Scan the file first to check if the modules or symbols (e.g. `const test = require('node:test')`) are already imported or declared.
+  - Integrate the new logic cleanly by merging imports and combining hook functions (e.g., merging multiple `after()` handlers) to avoid compilation failures (`SyntaxError`).
