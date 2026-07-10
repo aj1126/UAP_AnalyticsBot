@@ -41,3 +41,17 @@
 
 - **Isolate Test Databases:** During tests, always configure the SQLite database path to use `:memory:` or a temporary test file. This prevents unit tests from polluting or corrupting workspace database files.
 - **Differentiate Mock and Binary File Extensions:** Never use the same filename or extension for binary SQLite databases (e.g., `.db` or `.sqlite`) and text-based mock fallbacks (e.g., JSON mock files). Use distinct extensions like `.json` for the text fallback to prevent native database engines from crashing with `ERR_SQLITE_ERROR: file is not a database` when attempting to load JSON files.
+
+- **Graceful Worker Thread Teardown:** Inside the worker script itself, do not call `process.exit(0)` to shut down. Under test runner coverage modes, an abrupt `process.exit` kills the V8 thread before coverage results can be written, resulting in access violations. Instead, call `parentPort.close()` wrapped inside `setImmediate()` to permit a graceful and clean teardown.
+  ```javascript
+  if (task.action === 'close') {
+      setImmediate(() => {
+          parentPort.close();
+      });
+      return;
+  }
+  ```
+
+## Data Mapping & Metadata Invariants
+
+- **Metadata Integrity Preservation:** When mapping ingested files or structures in downstream processors (such as the Analytics Engine or custom database handlers), ensure that original parsing metadata fields are preserved using `metadata: file.metadata || {}` rather than overwritten with default blank objects.

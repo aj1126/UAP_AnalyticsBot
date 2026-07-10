@@ -12,7 +12,7 @@ const { generateCsvReport } = require('../src/delivery/csv-generator');
 // Global synchronization macro guard to prevent WebAssembly unmanaged heap access violations on process exit
 after(async () => {
     // Explicitly give the unmanaged WebAssembly memory space time to flush before process exit
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 });
 
 async function createFixtureDirectory() {
