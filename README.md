@@ -71,6 +71,7 @@ flowchart TD
 - [Documentation Workflow](#documentation-workflow)
 - [Non-Destructive Guarantee](#non-destructive-guarantee)
 - [Notes for Contributors and Copilot](#notes-for-contributors-and-copilot)
+- [Copilot to Gemini Migration Playbook](#copilot-to-gemini-migration-playbook)
 - [Installation & Setup](#installation-setup)
 - [Alternative & Manual Installation](#alternative-manual-installation)
   - [Manual Setup](#manual-setup)
@@ -282,6 +283,13 @@ The bot must never modify, move, or delete ingested source files. Ingestion is r
 - Preserve strict read-only behavior for source directories.
 - When adding analytics, classify behavior under one of the four analytics tiers.
 - Update [docs/architecture.md](docs/architecture.md) when implementation changes affect current-vs-planned system boundaries.
+
+
+## Copilot to Gemini Migration Playbook
+
+If you are transitioning development workflows from GitHub Copilot to Google Gemini tooling, follow:
+
+- [docs/GEMINI_MIGRATION_PLAYBOOK.md](docs/GEMINI_MIGRATION_PLAYBOOK.md)
 
 
 <br>
