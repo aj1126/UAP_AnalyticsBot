@@ -10,41 +10,16 @@
 ## Pipeline Overview
 
 ```mermaid
-flowchart LR
-    subgraph INGEST ["🔍 Ingestion Layer"]
-        direction TB
-        A1["📄 Text & Documents\n.txt .md .json .csv .log .pdf"]
-        A2["🖼️ Images\n.png .jpg .jpeg"]
-        A3["🎬 Video\n.mp4 — keyframes + Whisper"]
-        A4["🔊 Audio ⚠️ Planned\n.mp3 .wav .ogg .flac"]
-    end
+flowchart TD
+    A["🔍 INGESTION\n──────────────────────────\n📄 Text & Docs  🖼️ Images  🎬 Video\n📄 .txt .md .pdf .csv .log .json\n🖼️ .png .jpg .jpeg\n🎬 .mp4  ──  keyframes + Whisper\n🔊 .mp3 .wav .ogg .flac  ⚠️ planned"]
 
-    subgraph NORM ["⚙️ Normalization"]
-        direction TB
-        B1["Recursive walkFiles()"]
-        B2["Worker Thread Pool"]
-        B3["Fingerprint Cache"]
-        B4["OCR Fallback (MuPDF → Tesseract)"]
-        B5["Word Condensation ⚠️ Planned\nStemming · Possessives · Plurals"]
-    end
+    B["⚙️ NORMALIZATION\n──────────────────────────\nRecursive walkFiles()  ·  Worker Thread Pool\nFingerprint Cache  ·  OCR Fallback  (MuPDF → Tesseract)\nWord Condensation  ⚠️ planned  (stemming · possessives · plurals)"]
 
-    subgraph ANALYZE ["📊 Analytics Engine"]
-        direction TB
-        C1["🟦 Descriptive\nTerm Freq · Dates · Locations"]
-        C2["🟨 Diagnostic\nTF-IDF · Cosine Similarity"]
-        C3["🟧 Predictive\nWeighted Moving Avg · Forecasting"]
-        C4["🟥 Prescriptive\nAnomalies · Recommendations"]
-    end
+    C["📊 ANALYTICS ENGINE\n──────────────────────────\n🟦 Descriptive  —  Term Freq · Dates · Locations\n🟨 Diagnostic   —  TF-IDF · Cosine Similarity\n🟧 Predictive   —  Weighted Moving Avg · Forecasting\n🟥 Prescriptive —  Anomalies · Recommendations"]
 
-    subgraph OUTPUT ["📤 Output Layer"]
-        direction TB
-        D1["JSON stdout"]
-        D2["Markdown Report"]
-        D3["CSV Export"]
-        D4["Web GUI Dashboard"]
-    end
+    D["📤 OUTPUT\n──────────────────────────\nJSON stdout  ·  Markdown Report  ·  CSV Export  ·  Web GUI"]
 
-    INGEST --> NORM --> ANALYZE --> OUTPUT
+    A --> B --> C --> D
 ```
 
 ## Feature Roadmap
