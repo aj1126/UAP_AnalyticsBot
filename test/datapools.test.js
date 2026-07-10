@@ -24,10 +24,12 @@ test('UAP Data Pools & Saved Ingestions Suite', async (t) => {
     });
 
     // Clean up server after tests
-    t.after(() => {
+    t.after(async () => {
         server.close();
         // Clear mock DB if mock mode is active
         datapoolDb._clearMockDb();
+        // Explicitly give the unmanaged WebAssembly memory space time to flush before process exit
+        await new Promise((resolve) => setTimeout(resolve, 1500));
     });
 
     await t.test('1. Database CRUD Operations', async (t2) => {

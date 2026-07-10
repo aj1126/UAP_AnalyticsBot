@@ -40,7 +40,7 @@ if (-not $nodeExists -or -not $npmExists) {
     if (-not (Check-Command "winget")) {
         Write-Host "Error: 'winget' (Windows Package Manager) is not available on this system." -ForegroundColor Red
         Write-Host "Please download and install Node.js manually from: https://nodejs.org/" -ForegroundColor Red
-        Exit 1
+        return 1
     }
     
     try {
@@ -62,7 +62,7 @@ if (-not $nodeExists -or -not $npmExists) {
     catch {
         Write-Host "Failed to install Node.js automatically via winget: $_" -ForegroundColor Red
         Write-Host "Please install Node.js manually: https://nodejs.org/" -ForegroundColor Red
-        Exit 1
+        return 1
     }
 } else {
     Write-Host "[OK] Node.js and npm are already installed." -ForegroundColor Green
@@ -79,5 +79,5 @@ if (Check-Command "npm") {
     Write-Host "Setup completed successfully!" -ForegroundColor Green
 } else {
     Write-Host "[ERROR] Could not locate npm even after setup. Please restart your terminal." -ForegroundColor Red
-    Exit 1
+    return 1
 }

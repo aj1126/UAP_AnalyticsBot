@@ -139,8 +139,10 @@ async function ingestDirectory(sourceDirectory, options = {}) {
 
         function assignNextTask(worker) {
             if (currentIndex >= pathsToProcess.length) {
-                // Send a close message so the worker shuts down gracefully after its event loop empties
-                worker.postMessage({ action: 'close' });
+                // Defer termination to avoid re-entrancy segfaults
+                setImmediate(() => {
+                    worker.terminate();
+                });
                 return;
             }
             const task = pathsToProcess[currentIndex++];

@@ -19,8 +19,10 @@ test('GUI Backend API Integration Suite', async (t) => {
     });
 
     // Clean up server after tests
-    t.after(() => {
+    t.after(async () => {
         server.close();
+        // Explicitly give the unmanaged WebAssembly memory space time to flush before process exit
+        await new Promise((resolve) => setTimeout(resolve, 1500));
     });
 
     await t.test('GET / serves the dashboard HTML file', async () => {

@@ -1,10 +1,18 @@
 process.env.NODE_ENV = 'test';
 
 const test = require('node:test');
+const { after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
+
+// Global synchronization macro guard to prevent WebAssembly unmanaged heap access violations on process exit
+after(async () => {
+    // Explicitly give the unmanaged WebAssembly memory space time to flush before process exit
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+});
+
 const { ingestDirectory } = require('../src/ingestion/file-ingestion');
 
 test('Video Ingestion System Unit Suite', async (t) => {
