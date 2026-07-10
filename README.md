@@ -7,8 +7,81 @@
 [![Coverage](https://img.shields.io/badge/Coverage-94.89%25-brightgreen)](#)
 [![Version](https://img.shields.io/badge/Version-1.0.0-blue)](#)
 
+## Pipeline Overview
+
+```mermaid
+flowchart LR
+    subgraph INGEST ["🔍 Ingestion Layer"]
+        direction TB
+        A1["📄 Text & Documents\n.txt .md .json .csv .log .pdf"]
+        A2["🖼️ Images\n.png .jpg .jpeg"]
+        A3["🎬 Video\n.mp4 — keyframes + Whisper"]
+        A4["🔊 Audio ⚠️ Planned\n.mp3 .wav .ogg .flac"]
+    end
+
+    subgraph NORM ["⚙️ Normalization"]
+        direction TB
+        B1["Recursive walkFiles()"]
+        B2["Worker Thread Pool"]
+        B3["Fingerprint Cache"]
+        B4["OCR Fallback (MuPDF → Tesseract)"]
+        B5["Word Condensation ⚠️ Planned\nStemming · Possessives · Plurals"]
+    end
+
+    subgraph ANALYZE ["📊 Analytics Engine"]
+        direction TB
+        C1["🟦 Descriptive\nTerm Freq · Dates · Locations"]
+        C2["🟨 Diagnostic\nTF-IDF · Cosine Similarity"]
+        C3["🟧 Predictive\nWeighted Moving Avg · Forecasting"]
+        C4["🟥 Prescriptive\nAnomalies · Recommendations"]
+    end
+
+    subgraph OUTPUT ["📤 Output Layer"]
+        direction TB
+        D1["JSON stdout"]
+        D2["Markdown Report"]
+        D3["CSV Export"]
+        D4["Web GUI Dashboard"]
+    end
+
+    INGEST --> NORM --> ANALYZE --> OUTPUT
+```
+
+## Feature Roadmap
+
+| # | Feature | Status |
+|---|---|:---:|
+| | **Ingestion** | |
+| — | Text / Document ingestion (`.txt` `.md` `.pdf` `.csv` `.log`) | ✅ Complete |
+| — | Image OCR ingestion (`.png` `.jpg` via Tesseract) | ✅ Complete |
+| — | MuPDF rasterization fallback for corrupted/scanned PDFs | ✅ Complete |
+| — | Multithreaded worker pool + fingerprint cache | ✅ Complete |
+| — | Video ingestion — keyframe OCR + Whisper transcription (`.mp4`) | ✅ Complete |
+| [#19](https://github.com/aj1126/UAP_AnalyticsBot/issues/19) | Unified audio ingestion (standalone `.mp3`/`.wav` + video audio tracks) | 🔵 Planned |
+| [#20](https://github.com/aj1126/UAP_AnalyticsBot/issues/20) | Advanced video content analysis — object detection, scene classification, motion estimation | 🔵 Planned |
+| | **NLP & Normalization** | |
+| — | NLP entity extraction — dates & locations via `compromise` | ✅ Complete |
+| — | TF-IDF weighting + cosine similarity diagnostic tier | ✅ Complete |
+| — | Weighted moving average predictive forecasting | ✅ Complete |
+| [#21](https://github.com/aj1126/UAP_AnalyticsBot/issues/21) | Recursive word condensation — possessives, plurals, stemming, case dedup | 🔵 Planned |
+| | **Output & Delivery** | |
+| — | JSON, Markdown, and CSV report delivery | ✅ Complete |
+| — | Directory watch mode (`--watch`) via chokidar | ✅ Complete |
+| — | Local Web GUI with browser-based directory browsing | ✅ Complete |
+| — | Telemetry pipeline — GitHub webhook ingestion & subagent handoff | ✅ Complete |
+| | **Infrastructure** | |
+| — | GitHub Actions CI (test + docs) | ✅ Complete |
+| — | 1-click Windows install (`install.bat`) + diagnostics tool | ✅ Complete |
+| — | DataPools API — ingestion management & SQLite persistence | ✅ Complete |
+
+> **Legend:** ✅ Complete · 🔵 Planned · ⚠️ Partially implemented
+
+---
+
 ## Table of Contents
 
+- [Pipeline Overview](#pipeline-overview)
+- [Feature Roadmap](#feature-roadmap)
 - [Quick Start](#quick-start)
 - [Core Loop: Ingest -> Analyze -> Report](#core-loop-ingest---analyze---report)
 - [Analytics Scope](#analytics-scope)
