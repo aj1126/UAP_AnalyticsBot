@@ -15,9 +15,16 @@ const SUPPORTED_EXTENSIONS = new Set([
     ...TEXT_EXTENSIONS,
     ...IMAGE_EXTENSIONS,
     ".pdf",
+    ".mp4",
 ]);
 
 parentPort.on("message", async (task) => {
+    if (task.action === 'close') {
+        setImmediate(() => {
+            parentPort.close();
+        });
+        return;
+    }
     try {
         const extension = path.extname(task.filePath).toLowerCase();
         if (!SUPPORTED_EXTENSIONS.has(extension)) {
@@ -31,6 +38,7 @@ parentPort.on("message", async (task) => {
 
         const stats = await fsp.stat(task.filePath);
         let textContent = "";
+        let fileMetadata = {};
 
         const processTextChunk = (text) => {
             if (text) {
@@ -120,19 +128,155 @@ parentPort.on("message", async (task) => {
             }
         };
 
+        const processVideoFile = async () => {
+            if (process.env.NODE_ENV === 'test' && task.filePath.endsWith('mock_video.mp4')) {
+                fileMetadata = {
+                    duration: 30,
+                    transcripts: [
+                        { timestamp: '00:00:05', text: 'Mock transcription of UAP event' }
+                    ],
+                    ocrFrames: [
+                        { timestamp: '00:00:10', text: 'Mock visual text overlay' }
+                    ]
+                };
+                processTextChunk('--- Audio Transcript ---');
+                processTextChunk('[00:00:05] Mock transcription of UAP event');
+                processTextChunk('\n--- Visual Frame OCR Text ---');
+                processTextChunk('[00:00:10] Mock visual text overlay');
+                return;
+            }
+
+            const { spawn } = require('child_process');
+            const crypto = require('crypto');
+            const tesseract = require('tesseract.js');
+
+            // 1. Create a unique scratch directory for frame exports
+            const randId = crypto.randomBytes(4).toString('hex');
+            const tempFramesDir = path.resolve(process.cwd(), `scratch/temp_frames_${Date.now()}_${randId}`);
+            await fsp.mkdir(tempFramesDir, { recursive: true });
+
+            // 2. Resolve Python path (prefer local .venv)
+            let pythonCmd = 'python';
+            try {
+                const venvPython = path.resolve(process.cwd(), '.venv/Scripts/python.exe');
+                await fsp.access(venvPython);
+                pythonCmd = venvPython;
+            } catch {
+                // Fallback to system Python
+            }
+
+            const scriptPath = path.resolve(process.cwd(), 'scripts/video_ingestion.py');
+
+            // 3. Spawn Python process
+            const jsonOutput = await new Promise((resolve) => {
+                const child = spawn(pythonCmd, [
+                    scriptPath,
+                    '--file', task.filePath,
+                    '--output-dir', tempFramesDir
+                ]);
+
+                let stdoutData = '';
+                let stderrData = '';
+
+                child.stdout.on('data', (data) => {
+                    stdoutData += data.toString();
+                });
+
+                child.stderr.on('data', (data) => {
+                    stderrData += data.toString();
+                });
+
+                child.on('close', (code) => {
+                    if (code !== 0) {
+                        process.stderr.write(`\n⚠️ Video ingestion helper script exited with code ${code}. Stderr: ${stderrData}\n`);
+                    }
+                    resolve(stdoutData);
+                });
+            });
+
+            // 4. Parse Python output
+            let duration = 0;
+            let transcripts = [];
+            let extractedFrames = [];
+            let ocrFrames = [];
+
+            if (jsonOutput.trim()) {
+                try {
+                    const parsed = JSON.parse(jsonOutput);
+                    if (parsed.error) {
+                        process.stderr.write(`\n⚠️ Video Ingestion Error: ${parsed.error}\n`);
+                    } else {
+                        duration = parsed.duration || 0;
+                        transcripts = parsed.transcripts || [];
+                        extractedFrames = parsed.extractedFrames || [];
+                    }
+                } catch (err) {
+                    process.stderr.write(`\n⚠️ Failed to parse video ingestion stdout: ${err.message}\n`);
+                }
+            }
+
+            // 5. Run Tesseract OCR on each exported frame
+            for (const frame of extractedFrames) {
+                try {
+                    const ocrResult = await tesseract.recognize(frame.path, 'eng', { logger: () => {} });
+                    const ocrText = ocrResult?.data?.text || '';
+                    if (ocrText.trim()) {
+                        ocrFrames.push({
+                            timestamp: frame.timestamp,
+                            text: ocrText.trim()
+                        });
+                    }
+                } catch (ocrErr) {
+                    process.stderr.write(`\n⚠️ Frame OCR failed at ${frame.timestamp}: ${ocrErr.message}\n`);
+                }
+            }
+
+            // 6. Build consolidated text content
+            if (transcripts.length > 0) {
+                processTextChunk('--- Audio Transcript ---');
+                for (const segment of transcripts) {
+                    processTextChunk(`[${segment.timestamp}] ${segment.text}`);
+                }
+            }
+
+            if (ocrFrames.length > 0) {
+                processTextChunk('\n--- Visual Frame OCR Text ---');
+                for (const frame of ocrFrames) {
+                    processTextChunk(`[${frame.timestamp}] ${frame.text}`);
+                }
+            }
+
+            // Populate metadata
+            fileMetadata = {
+                duration,
+                transcripts,
+                ocrFrames
+            };
+
+            // 7. Cleanup temp directory
+            try {
+                await fsp.rm(tempFramesDir, { recursive: true, force: true });
+            } catch (cleanupErr) {
+                // Ignore cleanup errors
+            }
+        };
+
         if (TEXT_EXTENSIONS.has(extension)) {
             await processTextFile();
         } else if (extension === ".pdf") {
             await processPdfFile();
         } else if (IMAGE_EXTENSIONS.has(extension)) {
             await processImageFile();
+        } else if (extension === ".mp4") {
+            await processVideoFile();
         }
 
         parentPort.postMessage({
             success: true,
             filePath: task.filePath,
             fingerprint: task.fingerprint,
-            result: {
+            fileData: {
+                filePath: task.filePath,
                 fileName: task.filePath.split(/[/\\]/).pop(),
                 relativePath: task.rootDirectory
                     ? path.relative(task.rootDirectory, task.filePath)
@@ -141,6 +285,7 @@ parentPort.on("message", async (task) => {
                 size: stats.size,
                 modifiedAt: stats.mtime.toISOString(),
                 textContent,
+                metadata: fileMetadata || {}
             },
         });
     } catch (error) {

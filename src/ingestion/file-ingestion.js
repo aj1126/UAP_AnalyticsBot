@@ -4,21 +4,36 @@ const fs = require('node:fs/promises');
 const crypto = require('node:crypto');
 
 const CACHE_FILE = '.analytics_cache.json';
+const CACHE_SCHEMA_VERSION = 1;
 
-async function loadCache(rootDir) {
+async function loadCache() {
     try {
-        const cachePath = path.join(rootDir, CACHE_FILE);
+        const cachePath = path.join(process.cwd(), CACHE_FILE);
         const data = await fs.readFile(cachePath, 'utf-8');
-        return JSON.parse(data);
+        const parsed = JSON.parse(data);
+        if (
+            parsed &&
+            parsed.version === CACHE_SCHEMA_VERSION &&
+            parsed.entries &&
+            typeof parsed.entries === 'object' &&
+            !Array.isArray(parsed.entries)
+        ) {
+            return parsed.entries;
+        }
+        return Object.create(null);
     } catch {
         return Object.create(null);
     }
 }
 
-async function saveCache(rootDir, cache) {
+async function saveCache(entries) {
     try {
-        const cachePath = path.join(rootDir, CACHE_FILE);
-        await fs.writeFile(cachePath, JSON.stringify(cache, null, 2), 'utf-8');
+        const cachePath = path.join(process.cwd(), CACHE_FILE);
+        const payload = {
+            version: CACHE_SCHEMA_VERSION,
+            entries
+        };
+        await fs.writeFile(cachePath, JSON.stringify(payload, null, 2), 'utf-8');
     } catch {
         // Fallback silently if the directory is read-only
     }
@@ -34,7 +49,7 @@ async function walkFiles(dir, fileList = []) {
             }
         } else {
             const ext = path.extname(entry.name).toLowerCase();
-            if (['.txt', '.md', '.pdf', '.png', '.jpg', '.jpeg'].includes(ext)) {
+            if (['.txt', '.md', '.pdf', '.png', '.jpg', '.jpeg', '.mp4'].includes(ext)) {
                 fileList.push(fullPath);
             }
         }
@@ -44,33 +59,47 @@ async function walkFiles(dir, fileList = []) {
 
 async function ingestDirectory(sourceDirectory, options = {}) {
     const numWorkers = options.workers || 1;
+    const cachePath = path.join(process.cwd(), CACHE_FILE);
     if (options.clearCache) {
         try {
-            await fs.unlink(path.join(sourceDirectory, CACHE_FILE));
+            await fs.unlink(cachePath);
         } catch {}
     }
 
-    const cache = await loadCache(sourceDirectory);
+    const cache = await loadCache();
     const allFilePaths = await walkFiles(sourceDirectory);
     
     const pathsToProcess = [];
     const finalFiles = [];
+    const visitedPaths = new Set();
 
     for (const filePath of allFilePaths) {
+        visitedPaths.add(filePath);
         const stat = await fs.stat(filePath);
         const fingerprint = crypto
             .createHash('md5')
             .update(`${filePath}:${stat.mtimeMs}:${stat.size}`)
             .digest('hex');
 
-        if (cache[fingerprint]) {
-            finalFiles.push(cache[fingerprint]);
+        if (cache[filePath] && cache[filePath].fingerprint === fingerprint) {
+            finalFiles.push(cache[filePath].data);
         } else {
             pathsToProcess.push({ filePath, fingerprint });
         }
     }
 
+    // Evict stale cache keys scoped to this sourceDirectory
+    for (const key of Object.keys(cache)) {
+        if (
+            (key === sourceDirectory || key.startsWith(sourceDirectory + path.sep)) &&
+            !visitedPaths.has(key)
+        ) {
+            delete cache[key];
+        }
+    }
+
     if (pathsToProcess.length === 0) {
+        await saveCache(cache);
         return { sourceDirectory, files: finalFiles };
     }
 
@@ -86,7 +115,10 @@ async function ingestDirectory(sourceDirectory, options = {}) {
             worker.on('message', (msg) => {
                 if (msg.success && msg.fileData) {
                     finalFiles.push(msg.fileData);
-                    cache[msg.fingerprint] = msg.fileData;
+                    cache[msg.filePath] = {
+                        fingerprint: msg.fingerprint,
+                        data: msg.fileData
+                    };
                 }
                 assignNextTask(worker);
             });
@@ -120,7 +152,7 @@ async function ingestDirectory(sourceDirectory, options = {}) {
         }
     });
 
-    await saveCache(sourceDirectory, cache);
+    await saveCache(cache);
     return { sourceDirectory, files: finalFiles };
 }
 

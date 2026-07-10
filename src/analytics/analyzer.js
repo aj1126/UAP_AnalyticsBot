@@ -94,7 +94,7 @@ function analyzeFile(file) {
         uniqueWords: Object.keys(wordFrequency),
         dates: [...dates],
         locations: [...locations],
-        metadata: {}
+        metadata: file.metadata || {}
     };
 }
 

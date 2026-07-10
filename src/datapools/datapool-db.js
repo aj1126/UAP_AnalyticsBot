@@ -14,8 +14,27 @@ try {
     useMock = true;
 }
 
-const DB_PATH = path.join(process.cwd(), 'uap_telemetry.db');
-const MOCK_DB_PATH = path.join(process.cwd(), 'uap_datapools.json');
+let currentDbPath = path.join(process.cwd(), 'uap_telemetry.db');
+let currentMockDbPath = path.join(process.cwd(), 'uap_datapools.json');
+
+// Isolate test databases automatically
+if (process.env.NODE_ENV === 'test') {
+    currentDbPath = ':memory:';
+    currentMockDbPath = path.join(process.cwd(), 'uap_datapools_test.json');
+}
+
+function setDatabasePath(newDbPath, newMockPath) {
+    if (dbInstance) {
+        if (typeof dbInstance.close === 'function') {
+            dbInstance.close();
+        }
+        dbInstance = null;
+    }
+    currentDbPath = newDbPath;
+    if (newMockPath) {
+        currentMockDbPath = newMockPath;
+    }
+}
 
 class MockDatabase {
     constructor(filePath) {
@@ -29,7 +48,7 @@ class MockDatabase {
     }
 
     load() {
-        if (fs.existsSync(this.filePath)) {
+        if (this.filePath !== ':memory:' && fs.existsSync(this.filePath)) {
             try {
                 this.data = JSON.parse(fs.readFileSync(this.filePath, 'utf8'));
             } catch (err) {
@@ -39,12 +58,14 @@ class MockDatabase {
     }
 
     save() {
-        try {
-            const tmpPath = `${this.filePath}.tmp`;
-            fs.writeFileSync(tmpPath, JSON.stringify(this.data, null, 2), 'utf8');
-            fs.renameSync(tmpPath, this.filePath);
-        } catch (err) {
-            // Ignore write errors silently in test/dev
+        if (this.filePath !== ':memory:') {
+            try {
+                const tmpPath = `${this.filePath}.tmp`;
+                fs.writeFileSync(tmpPath, JSON.stringify(this.data, null, 2), 'utf8');
+                fs.renameSync(tmpPath, this.filePath);
+            } catch (err) {
+                // Ignore write errors silently in test/dev
+            }
         }
     }
 }
@@ -55,9 +76,9 @@ function getDatabase() {
     if (dbInstance) return dbInstance;
     
     if (useMock) {
-        dbInstance = new MockDatabase(MOCK_DB_PATH);
+        dbInstance = new MockDatabase(currentMockDbPath);
     } else {
-        dbInstance = new DatabaseSync(DB_PATH);
+        dbInstance = new DatabaseSync(currentDbPath);
     }
     return dbInstance;
 }
@@ -406,9 +427,9 @@ function getFilesInPool(poolId) {
 
 // Clear mock DB for testing
 function _clearMockDb() {
-    if (useMock && fs.existsSync(MOCK_DB_PATH)) {
+    if (useMock && fs.existsSync(currentMockDbPath)) {
         try {
-            fs.unlinkSync(MOCK_DB_PATH);
+            fs.unlinkSync(currentMockDbPath);
         } catch (e) {}
         dbInstance = null;
     }
@@ -425,5 +446,6 @@ module.exports = {
     linkIngestionToPool,
     unlinkIngestionFromPool,
     getFilesInPool,
-    _clearMockDb
+    _clearMockDb,
+    setDatabasePath
 };

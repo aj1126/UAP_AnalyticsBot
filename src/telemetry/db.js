@@ -162,7 +162,11 @@ function setDatabasePath(newPath) {
 function getDatabase() {
     if (!db) {
         if (useMock) {
-            db = new MockDatabaseSync(currentDbFile);
+            let targetPath = currentDbFile;
+            if (targetPath !== ':memory:' && targetPath.endsWith('uap_telemetry.db')) {
+                targetPath = targetPath.replace('uap_telemetry.db', 'uap_telemetry_mock.json');
+            }
+            db = new MockDatabaseSync(targetPath);
         } else {
             db = new DatabaseSync(currentDbFile);
         }

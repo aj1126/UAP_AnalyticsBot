@@ -30,6 +30,7 @@ Thumbs.db
 # =========================
 .env
 .env.local
+.gemini/
 copilot-chat-history.json
 *.traineddata
 .analytics_cache.json
@@ -41,6 +42,7 @@ copilot-chat-history.json
 /temp_processing/
 /ingested_cache/
 /data_exports/
+/scratch/
 *.log
 *.mp4
 *.pdf

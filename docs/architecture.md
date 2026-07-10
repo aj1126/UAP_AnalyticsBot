@@ -5,13 +5,9 @@
 The repository currently ships a Node.js CLI-centered analytics flow:
 
 1. **CLI Orchestrator (`src/index.js`)** resolves the source directory, supports watch mode, and routes report output to stdout or export files.
-2. **Read-Only Ingestion (`src/ingestion/file-ingestion.js`)** recursively scans supported text files, dispatches parsing work to Node.js worker threads, memoizes compatible results in `.analytics_cache.json`, and extracts words, dates, locations, and filesystem metadata.
-3. **Analytics Pipeline (`src/pipeline.js`)** builds the descriptive, diagnostic, predictive, and prescriptive tiers from the ingested file set.
-4. **Output Layer** returns structured JSON or saves Markdown / CSV exports for the requested directory.
-
-### v1.2.0 Pipeline Architecture
-* **Ingestion (Multithreaded):** Utilizes Node.js `worker_threads` and file-stat fingerprinting (`.analytics_cache.json`) to bypass redundant processing and drastically speed up execution.
-* **Semantic Analytics:** Employs a TF-IDF weighting engine to filter generic stop-words and a Cosine Similarity math engine to automatically cluster related UAP documents based on vector distance.
+2. **Read-Only Ingestion (`src/ingestion/file-ingestion.js`)** recursively scans supported files (including text, PDF, images, and video), dispatches parsing and extraction work to Node.js worker threads, and memoizes compatible results in `.analytics_cache.json`. It outputs a standard intermediate representation (SIR) schema.
+3. **Analytics Pipeline (`src/pipeline.js`)** consumes the SIR schema and builds the descriptive, diagnostic, predictive, and prescriptive tiers. This layer is decoupled from filesystem access and media decoding.
+* **Ingestion/Analytics Separation:** The Ingestion Layer handles raw file loading, OCR, and transcription, producing a unified JSON schema. The Analytics Layer remains file-format agnostic and performs natural language processing, clustering, and trend mapping.
 
 ## Current Runtime Boundaries
 

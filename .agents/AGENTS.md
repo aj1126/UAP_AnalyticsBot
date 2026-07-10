@@ -36,3 +36,8 @@
   - Do not blindly prepend duplicate `require` or `import` blocks.
   - Scan the file first to check if the modules or symbols (e.g. `const test = require('node:test')`) are already imported or declared.
   - Integrate the new logic cleanly by merging imports and combining hook functions (e.g., merging multiple `after()` handlers) to avoid compilation failures (`SyntaxError`).
+
+## SQLite & Mock Database Hygiene
+
+- **Isolate Test Databases:** During tests, always configure the SQLite database path to use `:memory:` or a temporary test file. This prevents unit tests from polluting or corrupting workspace database files.
+- **Differentiate Mock and Binary File Extensions:** Never use the same filename or extension for binary SQLite databases (e.g., `.db` or `.sqlite`) and text-based mock fallbacks (e.g., JSON mock files). Use distinct extensions like `.json` for the text fallback to prevent native database engines from crashing with `ERR_SQLITE_ERROR: file is not a database` when attempting to load JSON files.
