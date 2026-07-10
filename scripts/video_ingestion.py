@@ -67,16 +67,34 @@ def process_video(file_path: str, output_dir: str):
                 )
             has_audio = True
             
-        # 2. Extract frames every 15 seconds
+        # 2. Extract frames every 15 seconds and run OCR
         extracted_frames = []
         interval = 15.0 # seconds
         current_time = 0.0
+
+        has_pytesseract = False
+        try:
+            import pytesseract
+            from PIL import Image
+            has_pytesseract = True
+        except ImportError:
+            pass
+
         while current_time < duration:
             frame_path = out_dir / f"frame_{int(current_time)}.png"
             clip.save_frame(str(frame_path), t=current_time)
+            
+            ocr_text = ""
+            if has_pytesseract:
+                try:
+                    ocr_text = pytesseract.image_to_string(Image.open(frame_path)).strip()
+                except Exception as ocr_err:
+                    sys.stderr.write(f"Frame OCR failed at {current_time}: {str(ocr_err)}\n")
+
             extracted_frames.append({
                 "timestamp": format_timestamp(current_time),
-                "path": str(frame_path.absolute())
+                "path": str(frame_path.absolute()),
+                "text": ocr_text
             })
             current_time += interval
             
