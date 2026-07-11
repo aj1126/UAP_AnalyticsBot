@@ -55,3 +55,12 @@
 ## Data Mapping & Metadata Invariants
 
 - **Metadata Integrity Preservation:** When mapping ingested files or structures in downstream processors (such as the Analytics Engine or custom database handlers), ensure that original parsing metadata fields are preserved using `metadata: file.metadata || {}` rather than overwritten with default blank objects.
+
+
+## Documentation & Rendering Invariants
+
+- **Mermaid Diagram Layouts:** Always construct Mermaid flowcharts for READMEs or top-level documentation using a top-down (`flowchart TD`) layout rather than left-to-right (`flowchart LR`). Group sub-steps into consolidated single nodes and widen boxes using long horizontal lines (e.g. `───`) to ensure maximum legibility and prevent wrapping or scrolling on fixed-width repository pages.
+
+## Sandbox & Test Isolation Invariants
+
+- **Dynamic DB Helper Isolation:** All database layers (SQLite wrappers or mock files) must expose path manipulation methods (e.g., `setDatabasePath(newPath)`) and dynamically isolate unit tests by routing to `:memory:` or temporary test files when `process.env.NODE_ENV === 'test'`. Never execute database writes against live workspace database files during test runs.
