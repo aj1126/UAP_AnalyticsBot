@@ -11,13 +11,34 @@
 
 ```mermaid
 flowchart TD
-    A["🔍 INGESTION\n──────────────────────────\n📄 Text & Docs  🖼️ Images  🎬 Video\n📄 .txt .md .pdf .csv .log .json\n🖼️ .png .jpg .jpeg\n🎬 .mp4  ──  keyframes + Whisper\n🔊 .mp3 .wav .ogg .flac  ⚠️ planned"]
+    A["🔍 INGESTION LAYER
+──────────────────────────────────────────────────────────────────
+📄 Text & Documents  ::  .txt  .md  .pdf  .csv  .log  .json
+🖼️ Image Formats    ::  .png  .jpg  .jpeg  (via Tesseract OCR)
+🎬 Video Telemetry   ::  .mp4  (ffmpeg keyframe OCR + Whisper transcription)
+🔊 Audio Ingest      ::  .mp3  .wav  .ogg  .flac  (⚠️ planned - Issue #19)"]
 
-    B["⚙️ NORMALIZATION\n──────────────────────────\nRecursive walkFiles()  ·  Worker Thread Pool\nFingerprint Cache  ·  OCR Fallback  (MuPDF → Tesseract)\nWord Condensation  ⚠️ planned  (stemming · possessives · plurals)"]
+    B["⚙️ NORMALIZATION & PIPELINE MANAGEMENT
+──────────────────────────────────────────────────────────────────
+📂 Recursive walkFiles()  ::  Scans directory structures dynamically
+🧵 Worker Thread Pool     ::  Parallelizes CPU-intensive tasks natively
+💾 Fingerprint Caching    ::  Speeds up builds via .analytics_cache.json
+🔀 OCR Fallback Engine    ::  Direct MuPDF-to-sprite rasterization flow
+🔤 Word Condensation      ::  Stemming, plurals, & possessives (⚠️ planned - Issue #21)"]
 
-    C["📊 ANALYTICS ENGINE\n──────────────────────────\n🟦 Descriptive  —  Term Freq · Dates · Locations\n🟨 Diagnostic   —  TF-IDF · Cosine Similarity\n🟧 Predictive   —  Weighted Moving Avg · Forecasting\n🟥 Prescriptive —  Anomalies · Recommendations"]
+    C["📊 ANALYTICS & PROCESSING ENGINE
+──────────────────────────────────────────────────────────────────
+🟦 Descriptive Tier ::  Extracts proper noun entities, terms, & timelines
+🟨 Diagnostic Tier  ::  Computes TF-IDF metrics & Cosine Similarity matrices
+🟧 Predictive Tier  ::  Weighted moving average forecasting for hot-spots
+🟥 Prescriptive Tier::  Generates directory structuring alerts & recommendations"]
 
-    D["📤 OUTPUT\n──────────────────────────\nJSON stdout  ·  Markdown Report  ·  CSV Export  ·  Web GUI"]
+    D["📤 OUTPUT & DELIVERY INTERFACES
+──────────────────────────────────────────────────────────────────
+💻 CLI Stream        ::  JSON stdout streaming for downstream processors
+📄 Document Export   ::  Auto-generated Markdown intelligence reports
+📊 Tabular CSV       ::  Flat-mapped spreadsheets for data scientists
+🎨 Local Web Dashboard::  Automated GUI browser for telemetry monitoring"]
 
     A --> B --> C --> D
 ```
