@@ -10,11 +10,12 @@ This document tracks the active expansion phases for the AnalyticsBot pipeline.
 - [x] Ensure the output schema matches the existing `dates: []` and `locations: []` arrays so downstream analytics engines do not break.
 
 ## Stage 2: Multimedia Ingestion Routing
-**Goal:** Reintroduce legacy Python capabilities to parse PDFs and Images via the Node pipeline.
+**Goal:** Reintroduce legacy Python capabilities to parse PDFs and Images, and video transcription/OCR, via the Node pipeline.
 - [x] Install extraction dependencies (`npm install pdf-parse tesseract.js`).
-- [x] Update `TEXT_EXTENSIONS` set to include `.pdf`, `.png`, `.jpg`.
+- [x] Update `TEXT_EXTENSIONS` set to include `.pdf`, `.png`, `.jpg`, `.jpeg`, `.mp4`.
 - [x] Abstract `readTextFile` into a routing function (`readFileData`).
 - [x] Implement PDF buffer streaming and OCR image processing before passing text strings to the normalizer.
+- [x] Implement video ingestion with keyframe OCR and audio track Whisper transcription via Python offloading.
 
 ## Stage 3: Alternate Delivery Surfaces
 **Goal:** Abstract the output layer to support CSV and Markdown reports instead of just stdout JSON.
@@ -36,16 +37,18 @@ This document tracks the active expansion phases for the AnalyticsBot pipeline.
 - [x] Update `test/pipeline.test.js` with a mock PDF fixture to validate multi-page parsing.
 - [x] Test Resulting in successfull pdf file ingestion, parse and output.
 
-
 ## Feature Roadmap / Optional Modules
 
 | Category | Feature | Target Release | Status |
 | :--- | :--- | :--- | :--- |
-| **Performance** | Multithreaded Ingestion | v1.1.0 | Optional (Planned) |
-| **Performance** | Ingestion Caching | v1.1.0 | Optional (Planned) |
-| **NLP** | Entity Unification | v1.1.0 | Optional (Planned) |
-| **NLP** | Advanced Stop-Word Culling | v1.1.0 | Optional (Planned) |
-| **Diagnostics** | TF-IDF Weighting | v1.2.0 | Optional (Planned) |
-| **Diagnostics** | Semantic Similarity | v1.2.0 | Optional (Planned) |
-| **Predictive** | Time-Series Clustering | v1.2.0 | Optional (Planned) |
-| **Prescriptive** | Metadata Validation | v1.2.0 | Optional (Planned) |
+| **Performance** | Multithreaded Ingestion | v1.1.0 | Complete |
+| **Performance** | Ingestion Caching | v1.1.0 | Complete |
+| **NLP** | Entity Unification | v1.1.0 | Complete |
+| **NLP** | Advanced Stop-Word Culling | v1.1.0 | Complete |
+| **Diagnostics** | TF-IDF Weighting | v1.2.0 | Complete |
+| **Diagnostics** | Semantic Similarity | v1.2.0 | Complete |
+| **Predictive** | Time-Series Clustering | v1.2.0 | Complete |
+| **Prescriptive** | Metadata Validation | v1.2.0 | Complete |
+| **Ingestion** | Unified Audio Ingestion (.mp3, .wav, video audio demux Whisper transcription) | v1.3.0 | Planned (Issue #19) |
+| **Ingestion** | Advanced Video Content Analysis (YOLO/MobileNet visual object detection & motion tracking) | v1.3.0 | Planned (Issue #20) |
+| **NLP** | Recursive Word Condensation (possessives, plurals, stemming, case folding) | v1.3.0 | Planned (Issue #21) |

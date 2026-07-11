@@ -1,51 +1,41 @@
 sequenceDiagram
     autonumber
-    actor U as User
-    participant O as Node CLI Orchestrator (current)
+    actor User as User / Operator
+    participant O as CLI / GUI Orchestrators (current)
     participant SCN as Directory Scanner
-    participant EXT as Text File Router
-    participant TXT as Async Text Extractor
+    participant EXT as File Router
+    participant WRK as Worker Pool / Python Scripts
     participant META as Metadata Extractor
-    participant FEAT as Feature Builder
-    participant DES as Descriptive Engine
-    participant DIA as Diagnostic Engine
-    participant PRE as Predictive Engine
-    participant PRS as Prescriptive Engine
-    participant REP as Report Generator
-    participant OUT as Output Delivery
-    participant PLN as Planned Expansion
+    participant FEAT as Feature Builder (compromise NLP)
+    participant ANA as Analytics Engines (Descriptive/Diagnostic/Predictive/Prescriptive)
+    participant OUT as Output Delivery (JSON, Markdown, CSV, Web Dashboard)
+    participant PLN as Planned Expansion (Issues #19, #20, #21)
 
-    U->>O: Start analysis (source folder, options)
+    User->>O: Start analysis (source folder, options)
     O->>SCN: Scan source folder (read-only)
     SCN-->>O: File manifest
 
     loop For each file
         O->>EXT: Route by type
-        EXT->>TXT: Extract text asynchronously
-        EXT->>META: Extract metadata (time, path, size)
-        TXT-->>O: Text payload
+        alt Text/Document (.txt, .md, .csv, .log, .json, .pdf)
+            EXT->>WRK: Extract text (worker_threads / pdf-parse / OCR)
+        alt Image (.png, .jpg, .jpeg)
+            EXT->>WRK: Extract text (worker_threads / tesseract.js OCR)
+        alt Video (.mp4)
+            EXT->>WRK: Process video (Python keyframe OCR + Whisper transcription)
+        end
+        EXT->>META: Extract metadata (mtime, path, size, PDF author)
+        WRK-->>O: Text content
         META-->>O: Metadata payload
     end
 
-    O->>FEAT: Normalize text + build corpus/time/location features
-    FEAT-->>O: Feature dataset
+    O->>FEAT: Normalize text + extract NLP entities (dates, locations)
+    FEAT-->>O: Normalised corpus & features
 
-    O->>DES: Run descriptive analytics
-    DES-->>O: Glossary, frequencies, dates/locations
+    O->>ANA: Run Descriptive, Diagnostic, Predictive, & Prescriptive models
+    ANA-->>O: Glossaries, TF-IDF matrices, moving averages, warnings
 
-    O->>DIA: Run diagnostic analytics
-    DIA-->>O: Correlation maps (word vs date/location)
+    O->>OUT: Deliver report (JSON stdout, Markdown file, CSV spreadsheet, or GUI page)
+    OUT-->>User: Visual telemetry report & recommendations
 
-    O->>PRE: Run predictive analytics
-    PRE-->>O: Forecasted keyword/location trends
-
-    O->>PRS: Run prescriptive analytics
-    PRS-->>O: Actions, restructuring suggestions, missing-data flags
-
-    O->>REP: Compose unified analysis report
-    REP-->>O: Final report object
-
-    Note over O,OUT: Current output is a JSON report written to stdout
-    O->>OUT: Emit JSON report to stdout
-    OUT-->>U: Deliver JSON output
-    Note over PLN: Future work includes multimedia extraction, NER, and alternate delivery surfaces
+    Note over PLN: Future work includes unified audio files, visual object/motion video tracking, and stemming condensation.

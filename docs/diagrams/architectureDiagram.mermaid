@@ -7,12 +7,14 @@ flowchart LR
     subgraph Ingestion [Read-Only Ingestion Layer (current)]
         S[(Local Source Folder)]
         SCN[Directory Scanner]
-        EXT[Text File Router]
+        EXT[File Router]
         TXT[Async Text Extractor]
         META[Metadata Extractor<br/>timestamps, path, size]
+        BIN[PDF & Image OCR, Video Ingestion<br/>(current)]
         S --> SCN --> EXT
         EXT --> TXT
         EXT --> META
+        EXT --> BIN
     end
 
     subgraph Processing [Normalization & Feature Layer (current)]
@@ -29,18 +31,20 @@ flowchart LR
 
     subgraph Outputs [Reporting & Delivery]
         REP[Structured Analysis Report (JSON)<br/>(current)]
-        EXP[CSV / Markdown Export Modules<br/>(planned)]
+        EXP[CSV / Markdown Export Modules<br/>(current)]
+        DASH[Local Web GUI Dashboard<br/>(current)]
         LOG[Run Logs & Traceability Modules<br/>(planned)]
     end
 
     subgraph Planned [Planned Expansion]
-        BIN[Binary / Multimedia Extraction]
-        NER[NLP + Entity Recognition]
-        DASH[Dashboard Delivery]
+        AUD[Unified Audio Ingestion<br/>Issue #19]
+        VIS[Advanced Video Analysis<br/>Issue #20]
+        COND[Recursive Word Condensation<br/>Issue #21]
     end
 
     O --> Ingestion
     TXT --> CLEAN
+    BIN --> CLEAN
     META --> IDX
     CLEAN --> IDX
 
@@ -50,9 +54,11 @@ flowchart LR
     D3 --> REP
     D4 --> REP
     REP --> EXP
+    REP --> DASH
     REP --> LOG
-    EXT -. future routing .-> BIN
-    BIN -. future enrichment .-> NER
-    REP -. future delivery .-> DASH
+
+    EXT -. future routing .-> AUD
+    BIN -. future enrichment .-> VIS
+    CLEAN -. future normalization .-> COND
 
     S -. non-destructive access .-> SCN

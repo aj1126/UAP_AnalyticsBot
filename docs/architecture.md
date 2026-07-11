@@ -13,19 +13,22 @@ The repository currently ships a Node.js CLI-centered analytics flow:
 
 Implemented in the active system:
 
-- recursive read-only ingestion for `.txt`, `.md`, `.json`, `.csv`, `.log`, `.pdf`, `.png`, `.jpg`, and `.jpeg`
-- multithreaded worker pool (`node:worker_threads`) with fingerprint-based memoization cache (`.analytics_cache.json`)
-- PDF text extraction via `pdf-parse` with automatic OCR fallback (MuPDF + Tesseract) for rasterized/corrupted documents
-- image OCR via `tesseract.js` for `.png`/`.jpg`/`.jpeg` files
-- Named Entity Recognition (NER) for dates and locations via the `compromise` NLP library, with regex fallback for structured fields
-- TF-IDF weighting and Cosine Similarity cross-linking in the diagnostic tier (`src/analytics/diagnostic.js`)
-- weighted moving average forecasting with empty-interval fill in the predictive tier (`src/analytics/predictive.js`)
-- descriptive, diagnostic, predictive, and prescriptive analytics modules
-- JSON, Markdown, and CSV report delivery through the Node CLI (`--format=md`, `--format=csv`)
-- directory watch mode via `chokidar` (`--watch`) that re-runs the pipeline after file changes
-- `--workers=<n>` and `--clear-cache` CLI flags
-- local web GUI (`src/gui/server.js`) for browser-based directory browsing and analysis
-- telemetry pipeline (`src/telemetry/`) for GitHub webhook ingestion, drift detection, and subagent handoff simulation
+- **Supported Formats:** Recursive read-only ingestion for `.txt`, `.md`, `.json`, `.csv`, `.log`, `.pdf`, `.png`, `.jpg`, `.jpeg`, and `.mp4`.
+- **Multithreading & Caching:** A multithreaded worker pool (`node:worker_threads`) with fingerprint-based memoization cache (`.analytics_cache.json`).
+- **Scanned PDF Fallback:** PDF text extraction via `pdf-parse` with automated vector-to-raster fallback (MuPDF + Tesseract) to OCR corrupted/scanned documents.
+- **Image OCR:** Direct image text extraction via `tesseract.js` for `.png`/`.jpg`/`.jpeg`.
+- **Video Processing Pipeline:** Decoupled video processing for `.mp4` that offloads ffmpeg keyframe extraction, Whisper speech-to-text, and frame OCR to a local Python handler script (`scripts/video_ingestion.py`).
+- **Process & Thread Safety:**
+  - **Dynamic DB Path Isolation:** Configures isolated `:memory:` databases when `NODE_ENV=test` to prevent test contamination.
+  - **Graceful Thread Teardown:** Employs deferred worker termination (`setImmediate(() => worker.terminate())`) to prevent re-entrancy heap access violations (exit code `3221225477` / `0xC0000005`) on Windows.
+- **Named Entity Recognition (NER):** Entity extraction for dates and locations via the `compromise` NLP library, with regex-based fallbacks for structured fields.
+- **Mathematical Modeling:**
+  - **Diagnostic Tier:** Cosine Similarity matrices and TF-IDF weighting cross-referencing document vectors.
+  - **Predictive Tier:** Weighted moving average forecasting for timeline hot-spot analysis.
+- **Delivery Formats:** Outputs unified reports to standard output (JSON) or exports formatted Markdown (`--format=md`) and flat-mapped CSV (`--format=csv`) reports.
+- **Continuous Monitoring:** Real-time watch mode (`--watch`) via `chokidar` that recalculates analytics upon file changes.
+- **Local Web GUI:** Web-based browser interface (`src/gui/server.js`) for interactive directory scanning and metric graphs.
+- **Telemetry & Extension:** GitHub webhook parsing, SQL persistence (`uap_telemetry.db`), automated configuration drift analysis, and virtual subagent handoff simulation (`invoke_subagent`).
 
 ## Planned Expansion
 
