@@ -30,6 +30,10 @@
   ```
 - **Cross-Platform Font Paths:** Always ensure that `standardFontDataUrl` uses forward slashes (`/`) and ends with a trailing `/` (even on Windows). Convert backslashes using `.replace(/\\/g, '/')` to ensure PDF.js can resolve and append font file names correctly.
 
+## Offline-First Ingestion & Tesseract Assets
+
+- **Enforce Local Resource Loading:** All optical character recognition (OCR) and ingestion components (e.g. `tesseract.js`) must be configured to load helper workers, scripts, and trained language datasets (like `eng.traineddata`) locally from the workspace filesystem, rather than loading them dynamically from external web CDNs. This prevents network-bound requests and hanging execution cycles in sandbox/air-gapped environments.
+
 ## Code Injection & Boilerplate Safety
 
 - **Avoid Redundant/Duplicate Declarations:** When prepending or injecting boilerplate blocks (such as WebAssembly memory teardowns, test runner imports, or setup/cleanup macros) into existing scripts or test files:
