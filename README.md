@@ -262,6 +262,7 @@ The current Node ingestion pipeline only analyzes text-oriented files.
 - `docs/legacy-prototype.md` — Historical Python prototype reference.
 - `docs/ROADMAP.md` — Active development tracker and planned stages.
 - `docs/USER_GUIDE.md` — Installation and execution instructions for end-users.
+- `docs/PROJECT_REVIEW.md` — Comprehensive codebase audit, architectural review, and engineering findings.
 <!-- GENERATED:repo-layout:END -->
 
 [↑ Back to Top](#uap-analyticsbot)

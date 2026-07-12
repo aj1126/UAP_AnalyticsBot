@@ -87,6 +87,10 @@
     {
       "path": "docs/USER_GUIDE.md",
       "description": "Installation and execution instructions for end-users."
+    },
+    {
+      "path": "docs/PROJECT_REVIEW.md",
+      "description": "Comprehensive codebase audit, architectural review, and engineering findings."
     }
   ],
   "requiredDocs": ["docs/architecture.md", "docs/legacy-prototype.md"]
