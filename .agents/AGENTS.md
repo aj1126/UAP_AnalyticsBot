@@ -64,6 +64,8 @@
 ## Documentation & Rendering Invariants
 
 - **Mermaid Diagram Layouts:** Always construct Mermaid flowcharts for READMEs or top-level documentation using a top-down (`flowchart TD`) layout rather than left-to-right (`flowchart LR`). Group sub-steps into consolidated single nodes and widen boxes using long horizontal lines (e.g. `───`) to ensure maximum legibility and prevent wrapping or scrolling on fixed-width repository pages.
+- **Table of Contents Slug Invariants:** When documenting headings with special characters like ampersands (`&`), slashes (`/`), or punctuation, ensure Table of Contents links use the correct slugification format (e.g. `Telemetry & Extension Pipeline` slugifies to `#telemetry--extension-pipeline` with two hyphens, as the ampersand is removed but surrounding spaces generate hyphens).
+- **Secure Environment Configuration:** Never hardcode internal resource IDs, credentials, or third-party configurations (e.g. NotebookLM IDs) in public files or source code. Store them in a local `.env` file (verified as git-ignored) and commit a template `.env.example` placeholder file to repository source control.
 
 ## Sandbox & Test Isolation Invariants
 
