@@ -26,7 +26,7 @@
       "description": "Auto-generate CHANGELOG.md, bump the semantic version, and create a Git release tag based on conventional commit history."
     }
   ],
-  "supportedFileTypes": [".txt", ".md", ".json", ".csv", ".log", ".pdf", ".png", ".jpg", ".jpeg"],
+  "supportedFileTypes": [".txt", ".md", ".json", ".csv", ".log", ".pdf", ".png", ".jpg", ".jpeg", ".mp4"],
   "repoLayout": [
     {
       "path": "src/index.js",
@@ -59,6 +59,10 @@
     {
       "path": "src/telemetry/handoff.js",
       "description": "Subagent Handoff Simulator (simulates invoke_subagent)."
+    },
+    {
+      "path": "src/telemetry/subagent-runner.js",
+      "description": "Virtual subagent out-of-process runner."
     },
     {
       "path": "verify.js",

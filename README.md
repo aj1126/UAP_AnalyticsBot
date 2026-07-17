@@ -239,6 +239,7 @@ The current Node ingestion pipeline only analyzes text-oriented files.
 | `.png` | Ingested by the active Node pipeline |
 | `.jpg` | Ingested by the active Node pipeline |
 | `.jpeg` | Ingested by the active Node pipeline |
+| `.mp4` | Ingested by the active Node pipeline |
 <!-- GENERATED:supported-file-types:END -->
 
 [↑ Back to Top](#uap-analyticsbot)
@@ -255,6 +256,7 @@ The current Node ingestion pipeline only analyzes text-oriented files.
 - `src/telemetry/ingestion.js` — Telemetry Ingestion Engine for parsing webhook events.
 - `src/telemetry/analytics.js` — Telemetry Analytics and Drift Detection.
 - `src/telemetry/handoff.js` — Subagent Handoff Simulator (simulates invoke_subagent).
+- `src/telemetry/subagent-runner.js` — Virtual subagent out-of-process runner.
 - `verify.js` — E2E simulation script for telemetry extension.
 - `test/pipeline.test.js` — Node test coverage for core pipeline behavior.
 - `test/telemetry.test.js` — Test suite for telemetry extension.
