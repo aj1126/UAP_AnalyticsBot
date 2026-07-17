@@ -47,12 +47,13 @@ class MCPClientBridge:
 
 # --- Example Driver execution ---
 async def main():
-    config_file = r"E:\Repos\UAP_Analytics\config\mcp_tools_config.json"
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    config_file = os.path.join(base_dir, "config", "mcp_tools_config.json")
     client = MCPClientBridge(config_path=config_file)
     
     # Active workspace parameters extracted from your planning UI panel
     active_workspace_payload = {
-        "working_directory": "E:\\Repos\\UAP_Analytics",
+        "working_directory": base_dir,
         "requirements": [
             "R1. Telemetry Data Gathering",
             "R2. Parsing and Anomaly Detection"
