@@ -73,3 +73,16 @@
 
 - **Shell Escaping for Sequential Loops:** When executing multi-step CLI operations (such as batch deleting or adding files in a loop via `notebooklm`), avoid raw PowerShell `foreach` loops with double-quoted string variables which lead to shell parsing and expansion errors. Instead, run sequential commands programmatically using Python `subprocess` lists or a scratch script.
 
+## Process Decoupling Invariants
+
+- **Multimedia Offloading:** Decouple heavy decoding (such as video frame parsing, audio track extraction, and Whisper model execution) from the main Node thread and worker threads. Offload these tasks to standalone Python sub-processes using `child_process.spawn`.
+
+## Offline OCR Configuration
+
+- **Tesseract Asset Isolation:** When initializing Tesseract workers in JS/TS pipelines, always configure local worker paths and load `eng.traineddata` files from the local filesystem. Never rely on default CDN assets, ensuring air-gapped system compatibility.
+
+## Path Resolution Invariants
+
+- **Dynamic Paths in Bridges & Clients:** Bridge scripts (like `mcp_client_bridge.py`) and setup utilities must never hardcode absolute directories (e.g., `E:\Repos\...`). Use local relative paths or runtime path builders (like `os.path.abspath`) to determine paths dynamically based on the current workspace.
+
+
