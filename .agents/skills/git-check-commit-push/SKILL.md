@@ -29,3 +29,4 @@ Trigger this skill when the user asks to "check for changes and commit/push", "s
 
 5. **Push to remote**:
    - Run `git push` to push the commits to the upstream branch.
+   - If the push is rejected due to upstream changes, run `git pull --rebase` to integrate remote changes, then retry `git push`.
