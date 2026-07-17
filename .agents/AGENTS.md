@@ -68,3 +68,8 @@
 ## Sandbox & Test Isolation Invariants
 
 - **Dynamic DB Helper Isolation:** All database layers (SQLite wrappers or mock files) must expose path manipulation methods (e.g., `setDatabasePath(newPath)`) and dynamically isolate unit tests by routing to `:memory:` or temporary test files when `process.env.NODE_ENV === 'test'`. Never execute database writes against live workspace database files during test runs.
+
+## CLI & Scripting Invariants
+
+- **Shell Escaping for Sequential Loops:** When executing multi-step CLI operations (such as batch deleting or adding files in a loop via `notebooklm`), avoid raw PowerShell `foreach` loops with double-quoted string variables which lead to shell parsing and expansion errors. Instead, run sequential commands programmatically using Python `subprocess` lists or a scratch script.
+
