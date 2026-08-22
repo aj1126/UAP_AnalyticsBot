@@ -1,0 +1,9 @@
+[allowlist]
+description = "Ignore vendor, virtual environment, and package directories"
+paths = [
+  '''^\.venv/''',
+  '''^venv/''',
+  '''^node_modules/''',
+  '''^bin/''',
+  '''^obj/'''
+]

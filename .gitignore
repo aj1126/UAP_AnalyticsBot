@@ -47,3 +47,4 @@ copilot-chat-history.json
 *.mp4
 *.pdf
 diagnostics_report.txt
+.venv/
