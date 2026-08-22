@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Automatically Assign to Active Milestone
-        uses: actions/github-script@v6
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             // Fetches open milestones and assigns the newest issue to the first open milestone

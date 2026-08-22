@@ -37,7 +37,7 @@ async function main() {
         fs.writeFileSync(resultPath, JSON.stringify(resultPayload, null, 2), 'utf8');
         process.exit(0);
     } catch (err) {
-        console.error(`[Runner Error] Failed to process handoff ${handoffId}:`, err.message);
+        console.error("[Runner Error] Failed to process handoff %s:", handoffId, err.message);
         try {
             // Write a failure result
             fs.mkdirSync(resultsDir, { recursive: true });

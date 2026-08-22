@@ -1,7 +1,7 @@
-# Project: UAP_AnalyticsBot Telemetry Extension
+# Project: UAPBot (UAP_AnalyticsBot) Telemetry Extension
 
 ## Architecture
-We are extending the `UAP_AnalyticsBot` service with a telemetry ingestion, parsing, database, and subagent handoff pipeline.
+We are extending the `UAPBot` (`UAP_AnalyticsBot`) service with a telemetry ingestion, parsing, database, and subagent handoff pipeline.
 
 The new telemetry components will reside under `src/telemetry/`:
 1. **Database Layer (`src/telemetry/db.js`)**: Initializes and manages a local SQLite database (`uap_telemetry.db`). Stores raw webhook events, aggregated metrics, and anomaly logs.

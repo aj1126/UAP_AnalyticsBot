@@ -1,9 +1,9 @@
 # File: .agy/PROJECT_STATE.md
-# Antigravity Project State Manifest: UAP AnalyticsBot
+# Antigravity Project State Manifest: UAPBot
 
 ## 1. Project Metadata & Identity
 
-- **Project Name**: UAP_AnalyticsBot (`uap_analyticsbot`)
+- **Project Name**: UAPBot (`uapbot`, `uap_analyticsbot`)
 - **Version**: `1.0.0`
 - **Primary Runtime**: Node.js v20+ (ES Modules, Native `node:sqlite`, Worker Threads)
 - **Secondary Environment**: Python 3.12+ (`.venv` for auxiliary ML / OCR / legacy bindings)
