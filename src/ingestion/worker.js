@@ -1,6 +1,9 @@
 const path = require("node:path");
 const { parentPort } = require("node:worker_threads");
 const fsp = require("node:fs/promises");
+const { countUnicodeVowels } = require("../analytics/multilingual-dictionary");
+const { detectLanguage } = require("./language-detector");
+const { generateEnglishCopy } = require("./translator");
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Worker Unhandled Rejection:', reason);
@@ -89,9 +92,9 @@ parentPort.on("message", async (task) => {
                     const parsedResult = await parserInstance.getText({ pageJoiner: '\n' }); 
                     const textResult = parsedResult?.text || '';
                     
-                    const validText = textResult.replace(/[^\w\s]/g, '').trim();
-                    const vowelMatch = validText.match(/[aeiouyAEIOUY]/g);
-                    const vowelDensity = vowelMatch ? (vowelMatch.length / validText.length) : 0;
+                    const validText = textResult.replace(/[^\p{L}\p{N}\s]/gu, '').trim();
+                    const vowelCount = countUnicodeVowels(validText);
+                    const vowelDensity = validText.length > 0 ? (vowelCount / validText.length) : 0;
 
                     if (validText.length < 20 || vowelDensity < 0.15 || vowelDensity > 0.5) {
                         process.stdout.write(`\n🔍 Corrupted vector geometry detected in ${path.basename(task.filePath)}. Rasterizing via MuPDF & OCR...`);
@@ -272,6 +275,32 @@ parentPort.on("message", async (task) => {
             await processVideoFile();
         }
 
+        let detectedLanguage = "en";
+        let isEnglish = true;
+        let translatedText = null;
+        let sidecarPath = null;
+        let translationProvider = null;
+
+        if (textContent && textContent.trim().length > 0) {
+            const langInfo = detectLanguage(textContent);
+            detectedLanguage = langInfo.language;
+            isEnglish = langInfo.isEnglish;
+
+            if (!isEnglish && task.translate !== false) {
+                try {
+                    const transResult = await generateEnglishCopy(task.filePath, textContent, {
+                        dryRun: task.dryRunTranslation || false,
+                        sidecarDir: task.sidecarDir
+                    });
+                    translatedText = transResult.translatedText;
+                    sidecarPath = transResult.sidecarPath;
+                    translationProvider = transResult.provider;
+                } catch (err) {
+                    process.stderr.write(`\n⚠️ Translation failed for ${task.filePath}: ${err.message}\n`);
+                }
+            }
+        }
+
         parentPort.postMessage({
             success: true,
             filePath: task.filePath,
@@ -286,7 +315,19 @@ parentPort.on("message", async (task) => {
                 size: stats.size,
                 modifiedAt: stats.mtime.toISOString(),
                 textContent,
-                metadata: fileMetadata || {}
+                language: detectedLanguage,
+                isEnglish,
+                translatedText,
+                sidecarPath,
+                translationProvider,
+                metadata: {
+                    ...(fileMetadata || {}),
+                    language: detectedLanguage,
+                    isEnglish,
+                    translatedText: translatedText ? true : false,
+                    sidecarPath,
+                    translationProvider
+                }
             },
         });
     } catch (error) {

@@ -49,6 +49,10 @@ async function walkFiles(dir, fileList = []) {
             }
         } else {
             const ext = path.extname(entry.name).toLowerCase();
+            if (entry.name.endsWith('.en.txt')) {
+                // Exclude translation sidecar files from primary document walk
+                continue;
+            }
             if (['.txt', '.md', '.pdf', '.png', '.jpg', '.jpeg', '.mp4'].includes(ext)) {
                 fileList.push(fullPath);
             }
@@ -149,7 +153,10 @@ async function ingestDirectory(sourceDirectory, options = {}) {
             worker.postMessage({
                 filePath: task.filePath,
                 fingerprint: task.fingerprint,
-                rootDirectory: sourceDirectory
+                rootDirectory: sourceDirectory,
+                translate: options.translate !== undefined ? options.translate : true,
+                dryRunTranslation: options.dryRunTranslation || false,
+                sidecarDir: options.sidecarDir
             });
         }
     });

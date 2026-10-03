@@ -1,40 +1,13 @@
 const nlp = require("compromise");
+const { isStopWord, ALL_STOP_WORDS } = require("./multilingual-dictionary");
+const { detectLanguage } = require("../ingestion/language-detector");
 
-// ✨ Advanced Stop-Word Culling Dictionary
-const STOP_WORDS = new Set([
-    "a",
-    "about",
-    "an",
-    "and",
-    "are",
-    "as",
-    "at",
-    "be",
-    "by",
-    "for",
-    "from",
-    "how",
-    "i",
-    "in",
-    "is",
-    "it",
-    "of",
-    "on",
-    "or",
-    "that",
-    "this",
-    "to",
-    "was",
-    "what",
-    "when",
-    "where",
-    "who",
-    "will",
-    "with",
-]);
+// Legacy English stop-words maintained for backward compatibility
+const STOP_WORDS = ALL_STOP_WORDS;
 
 /**
  * Performs linguistic analysis and calculates word frequencies/NLP tags on a single raw file.
+ * Supports multilingual Unicode tokens and dual-text (original + translated sidecar) extraction.
  * @param {Object} file - Raw file metadata and text content
  * @returns {Object} Enriched file with analysis metrics
  */
@@ -45,16 +18,20 @@ function analyzeFile(file) {
     const wordFrequency = {};
     let totalWords = 0;
 
+    const detectedLang = file.language || (text ? detectLanguage(text).language : "en");
+    const isEnglish = file.isEnglish !== undefined ? file.isEnglish : (detectedLang === "en");
+
     if (text) {
-        // Strip out punctuation and count word frequencies
-        const rawWords = text
-            .replace(/[^\w\s]/g, "")
+        // Strip out non-letter/non-number punctuation with Unicode property escapes and count word frequencies
+        const normalizedText = text.normalize("NFKC");
+        const rawWords = normalizedText
+            .replace(/[^\p{L}\p{N}\s]/gu, " ")
             .toLowerCase()
             .split(/\s+/)
             .filter(
                 (word) =>
                     word.length > 1 &&
-                    !STOP_WORDS.has(word) &&
+                    !isStopWord(word, detectedLang) &&
                     !/^\d+$/.test(word),
             );
 
@@ -63,21 +40,28 @@ function analyzeFile(file) {
         }
         totalWords = rawWords.length;
 
-        // Perform NLP date and place matching
-        const doc = nlp(text);
-        for (const value of doc.match("#Date").out("array")) {
-            dates.add(value);
-        }
-        for (const value of doc.match("#Place").out("array")) {
-            locations.add(value);
+        // Perform NLP date and place matching across original text and translated text (if available)
+        const textsToScan = [text];
+        if (file.translatedText && file.translatedText !== text) {
+            textsToScan.push(file.translatedText);
         }
 
-        // Apply regex-based fallbacks for structured logs
-        for (const match of text.matchAll(/Date:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})/gi)) {
-            dates.add(match[1]);
-        }
-        for (const match of text.matchAll(/Location:\s*([A-Za-z][A-Za-z\t '-]*)/gi)) {
-            locations.add(match[1].trim());
+        for (const scanText of textsToScan) {
+            const doc = nlp(scanText);
+            for (const value of doc.match("#Date").out("array")) {
+                dates.add(value);
+            }
+            for (const value of doc.match("#Place").out("array")) {
+                locations.add(value);
+            }
+
+            // Apply regex-based fallbacks for structured logs (supporting multi-language labels)
+            for (const match of scanText.matchAll(/(?:Date|Datum|Fecha|Date|Дата):\s*([0-9]{4}-[0-9]{2}-[0-9]{2})/gi)) {
+                dates.add(match[1]);
+            }
+            for (const match of scanText.matchAll(/(?:Location|Ort|Lugar|Lieu|Место):\s*([\p{L}][\p{L}\t '-]*)/giu)) {
+                locations.add(match[1].trim());
+            }
         }
     }
 
@@ -88,13 +72,21 @@ function analyzeFile(file) {
         extension: file.extension,
         size: file.size,
         modifiedAt: file.modifiedAt,
+        language: detectedLang,
+        isEnglish,
+        translatedText: file.translatedText || null,
         wordCount: totalWords,
         wordFrequency,
         totalWords,
         uniqueWords: Object.keys(wordFrequency),
         dates: [...dates],
         locations: [...locations],
-        metadata: file.metadata || {}
+        metadata: {
+            ...(file.metadata || {}),
+            language: detectedLang,
+            isEnglish,
+            isTranslated: !!file.translatedText
+        }
     };
 }
 
