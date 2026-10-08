@@ -7,6 +7,9 @@ on:
 jobs:
   add-to-project:
     name: Add PR to Project
+    # Dependabot-triggered runs get no Actions secrets, so PROJECT_PAT is empty and the step fails.
+    # Checked on the PR author, not github.actor, so a human re-opening a bot PR still skips.
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Send to Project Board
