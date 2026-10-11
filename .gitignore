@@ -36,6 +36,7 @@ Thumbs.db
 copilot-chat-history.json
 *.traineddata
 .analytics_cache.json
+.workspace_context/
 
 # =========================
 # Bot Specific: Data & Media
