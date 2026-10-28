@@ -4,6 +4,10 @@ on:
   issues:
     types: [opened]
 
+# Reads milestones and sets one on the new issue; nothing else.
+permissions:
+  issues: write
+
 jobs:
   assign-milestone:
     runs-on: ubuntu-latest
